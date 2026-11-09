@@ -36,29 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPatientList();
   loadCurrentSchedule();
 
-  // スケジュール変更フォーム
   document.getElementById('edit-schedule-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const patient = appData.patients.find(p => p.id === appData.currentPatientId);
     if (!patient) return;
 
-    const bf = document.getElementById('sched-bf').value || '7:00';
-    const lunch = document.getElementById('sched-lunch').value || '12:00';
-    const dinner = document.getElementById('sched-dinner').value || '19:00';
-    const bath = document.getElementById('sched-bath').value || '17:00';
-
     patient.schedule = [
-      { label: '朝ごはん', time: bf },
-      { label: '昼ごはん', time: lunch },
-      { label: '晩ごはん', time: dinner },
-      { label: 'お風呂', time: bath }
+      { label: '朝ごはん', time: document.getElementById('sched-bf').value || '7:00' },
+      { label: '昼ごはん', time: document.getElementById('sched-lunch').value || '12:00' },
+      { label: '晩ごはん', time: document.getElementById('sched-dinner').value || '19:00' },
+      { label: 'お風呂', time: document.getElementById('sched-bath').value || '17:00' }
     ];
 
     saveData(appData);
-    alert(`${patient.name} 様のスケジュールを更新しました。患者画面に即座に反映されます。`);
+    alert(`${patient.name} 様のスケジュールを保存しました。`);
   });
 
-  // お薬追加フォーム
   document.getElementById('add-med-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('input-med-name').value;
