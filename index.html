@@ -19,8 +19,31 @@
     <main class="app-content">
       <section class="screen active">
         <div class="pharmacist-container">
-          <h3>患者選択</h3>
-          <div class="patient-select-list" id="pharmacist-patient-list"></div>
+          
+          <!-- 患者選択・登録セクション -->
+          <div class="patient-section">
+            <h3>患者選択</h3>
+            
+            <!-- 新規患者の入力・追加フォーム -->
+            <form id="add-patient-form" style="margin-bottom: 15px;">
+              <label for="patient-name-input">新規患者登録</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="patient-name-input" placeholder="例: 山田 太郎" required style="flex: 1;">
+                <button type="submit" class="action-btn" style="background: #3498db; width: auto; padding: 0 15px;">追加</button>
+              </div>
+            </form>
+
+            <!-- 登録済み患者の検索・選択 dropdown または リスト -->
+            <label for="patient-select">対象の患者を選択</label>
+            <select id="patient-select" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+              <option value="">-- 患者を選択してください --</option>
+              <option value="1">山田 太郎</option>
+              <option value="2">佐藤 花子</option>
+            </select>
+
+            <!-- 選択中患者の表示リスト領域 -->
+            <div class="patient-select-list" id="pharmacist-patient-list"></div>
+          </div>
 
           <hr class="divider">
 
@@ -49,7 +72,6 @@
           <div class="edit-medicine-section">
             <h3>処方薬・服用タイミングの設定</h3>
 
-            <!-- 新しい薬の追加フォーム -->
             <form id="add-medicine-form">
               <label for="med-name">薬品名</label>
               <input type="text" id="med-name" placeholder="例: ロキソニン" required>
@@ -61,27 +83,4 @@
               <div class="checkbox-group">
                 <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
                 <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
-                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
-                <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
-                <label><input type="checkbox" name="med-timing" value="頓服"> 痛むとき（頓服）</label>
-              </div>
-
-              <button type="submit" class="action-btn" style="background:#27ae60; margin-top: 10px;">薬を追加・登録</button>
-            </form>
-
-            <!-- 登録済みのお薬一覧 -->
-            <div class="registered-medicines-list" style="margin-top: 15px;">
-              <h4>登録中のお薬</h4>
-              <ul id="medicine-list">
-                <!-- JavaScriptで追加された薬情報がここに表示されます -->
-              </ul>
-            </div>
-          </div>
-
-        </div>
-      </section>
-    </main>
-  </div>
-
-</body>
-</html>
+                <label><input type="checkbox" name
