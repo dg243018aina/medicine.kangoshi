@@ -100,125 +100,128 @@
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let html5QrCode = null;
+
+      const startBtn = document.getElementById('start-scan-btn');
+      const stopBtn = document.getElementById('stop-scan-btn');
+      const readerContainer = document.getElementById('qr-reader-container');
+
+      // QR読み取り開始
+      startBtn.addEventListener('click', () => {
+        readerContainer.style.display = 'block';
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            // スキャン成功時の解析処理
+            parseMedicineQR(decodedText);
+            stopScanner();
+          },
+          (errorMessage) => {
+            // エラー無視（継続スキャン）
+          }
+        ).catch(err => {
+          alert("カメラの起動に失敗しました: " + err);
+          readerContainer.style.display = 'none';
+        });
+      });
+
+      // QR読み取り停止
+      stopBtn.addEventListener('click', stopScanner);
+
+      function stopScanner() {
+        if (html5QrCode && html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            readerContainer.style.display = 'none';
+          }).catch(err => {
+            readerContainer.style.display = 'none';
+          });
+        } else {
+          readerContainer.style.display = 'none';
+        }
+      }
+
+      // QRコードの文字列を解析してフォームにセットする関数
+      function parseMedicineQR(text) {
+        let medName = "";
+        let dosage = "";
+        let timings = [];
+
+        // JAHIS調剤明細フォーマット（カンマ区切りテキスト）または一般文字列を判定
+        const lines = text.split('\n');
+        let isJahis = false;
+
+        lines.forEach(line => {
+          const cols = line.split(',');
+          // JAHIS形式: Record No 201（薬品名）などの判定
+          if (cols[0] === '201' || cols[0] === '281') {
+            isJahis = true;
+            medName = cols[4] || cols[3] || medName;
+            if (cols[5]) dosage = cols[5] + (cols[6] || '');
+          }
+          if (cols[0] === '301' || cols[0] === '311') { // 用法
+            const usageText = cols[4] || '';
+            extractTimings(usageText, timings);
+          }
+        });
+
+        // 一般的な文字列・JSONの場合のフォールバック
+        if (!isJahis) {
+          try {
+            const data = JSON.parse(text);
+            medName = data.name || "";
+            dosage = data.dosage || "";
+            if (Array.isArray(data.timing)) timings = data.timing;
+          } catch (e) {
+            // プレーンテキスト（例: "ロキソニン 1錠 朝 昼"）
+            medName = text.split(/\s+/)[0] || text;
+            extractTimings(text, timings);
+          }
+        }
+
+        // フォームへの自動入力
+        if (medName) document.getElementById('med-name').value = medName;
+        if (dosage) document.getElementById('med-dosage').value = dosage;
+
+        // チェックボックスのリセット＆適用
+        const checkboxes = document.querySelectorAll('input[name="med-timing"]');
+        checkboxes.forEach(cb => {
+          cb.checked = timings.includes(cb.value);
+        });
+
+        alert(`お薬情報を取り込みました:\n薬品名: ${medName || '未取得'}`);
+      }
+
+      // テキスト内から「朝」「昼」「夕」「就寝前」「頓服」キーワードを判定
+      function extractTimings(str, targetArray) {
+        if (str.includes('朝')) targetArray.push('朝');
+        if (str.includes('昼')) targetArray.push('昼');
+        if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
+        if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
+        if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
+      }
+
+      // フォーム送信（お薬リストへの追加）
+      document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('med-name').value;
+        const dosage = document.getElementById('med-dosage').value;
+        const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+
+        const li = document.createElement('li');
+        li.textContent = `${name} - ${dosage || '指定なし'} [${checkedTimings.join(', ') || 'タイミング指定なし'}]`;
+        document.getElementById('medicine-list').appendChild(li);
+
+        // フォームリセット
+        e.target.reset();
+      });
+    });
+  </script>
 </body>
 </html>
-document.addEventListener('DOMContentLoaded', () => {
-  let html5QrCode = null;
-
-  const startBtn = document.getElementById('start-scan-btn');
-  const stopBtn = document.getElementById('stop-scan-btn');
-  const readerContainer = document.getElementById('qr-reader-container');
-
-  // QR読み取り開始
-  startBtn.addEventListener('click', () => {
-    readerContainer.style.display = 'block';
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode("qr-reader");
-    }
-
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        // スキャン成功時の解析処理
-        parseMedicineQR(decodedText);
-        stopScanner();
-      },
-      (errorMessage) => {
-        // エラー無視（継続スキャン）
-      }
-    ).catch(err => {
-      alert("カメラの起動に失敗しました: " + err);
-      readerContainer.style.display = 'none';
-    });
-  });
-
-  // QR読み取り停止
-  stopBtn.addEventListener('click', stopScanner);
-
-  function stopScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().then(() => {
-        readerContainer.style.display = 'none';
-      });
-    } else {
-      readerContainer.style.display = 'none';
-    }
-  }
-
-  // QRコードの文字列を解析してフォームにセットする関数
-  function parseMedicineQR(text) {
-    let medName = "";
-    let dosage = "";
-    let timings = [];
-
-    // JAHIS調剤明細フォーマット（カンマ区切りテキスト）または一般文字列を判定
-    const lines = text.split('\n');
-    let isJahis = false;
-
-    lines.forEach(line => {
-      const cols = line.split(',');
-      // JAHIS形式: Record No 201（薬品名）などの判定
-      if (cols[0] === '201' || cols[0] === '281') {
-        isJahis = true;
-        medName = cols[4] || cols[3] || medName;
-        if (cols[5]) dosage = cols[5] + (cols[6] || '');
-      }
-      if (cols[0] === '301' || cols[0] === '311') { // 用法
-        const usageText = cols[4] || '';
-        extractTimings(usageText, timings);
-      }
-    });
-
-    // 一般的な文字列・JSONの場合のフォールバック
-    if (!isJahis) {
-      try {
-        const data = JSON.parse(text);
-        medName = data.name || "";
-        dosage = data.dosage || "";
-        if (Array.isArray(data.timing)) timings = data.timing;
-      } catch (e) {
-        // プレーンテキスト（例: "ロキソニン 1錠 朝 昼"）
-        medName = text.split(/\s+/)[0] || text;
-        extractTimings(text, timings);
-      }
-    }
-
-    // フォームへの自動入力
-    if (medName) document.getElementById('med-name').value = medName;
-    if (dosage) document.getElementById('med-dosage').value = dosage;
-
-    // チェックボックスのリセット＆適用
-    const checkboxes = document.querySelectorAll('input[name="med-timing"]');
-    checkboxes.forEach(cb => {
-      cb.checked = timings.includes(cb.value);
-    });
-
-    alert(`お薬情報を取り込みました:\n薬品名: ${medName || '未取得'}`);
-  }
-
-  // テキスト内から「朝」「昼」「夕」「就寝前」「頓服」キーワードを判定
-  function extractTimings(str, targetArray) {
-    if (str.includes('朝')) targetArray.push('朝');
-    if (str.includes('昼')) targetArray.push('昼');
-    if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
-    if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
-    if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
-  }
-
-  // フォーム送信（お薬リストへの追加）
-  document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('med-name').value;
-    const dosage = document.getElementById('med-dosage').value;
-    const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
-
-    const li = document.createElement('li');
-    li.textContent = `${name} - ${dosage || '指定なし'} [${checkedTimings.join(', ') || 'タイミング指定なし'}]`;
-    document.getElementById('medicine-list').appendChild(li);
-
-    // フォームリセット
-    e.target.reset();
-  });
-});
