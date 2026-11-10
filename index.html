@@ -11,12 +11,12 @@
   <!-- QRコード読み取り用ライブラリ -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
-    /* 画面切り替え用の簡易スタイル */
+    /* 画面切り替え用のスタイル（!important で確実に適用） */
     .screen {
-      display: none;
+      display: none !important;
     }
     .screen.active {
-      display: block;
+      display: block !important;
     }
   </style>
 </head>
@@ -83,7 +83,7 @@
           
           <!-- 選択中の患者情報表示 -->
           <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-            <strong>対象患者: </strong><span id="target-patient-name" style="font-weight: bold; color: #e67e22;">未選択</span>
+            <strong>対象患者: </strong><span id="target-patient-name" style="font-weight: bold; color: #e67e22;">未指定</span>
           </div>
 
           <div class="edit-medicine-section">
@@ -100,4 +100,193 @@
 
             <button type="button" id="start-scan-btn" class="action-btn" style="background:#2980b9; margin-bottom: 10px;">📷 QRコードから読み込む</button>
             <div id="qr-reader-container" style="display:none; margin-bottom: 15px;">
-              <div id="qr-reader" style="width:
+              <div id="qr-reader" style="width: 100%;"></div>
+              <button type="button" id="stop-scan-btn" style="margin-top: 5px; width: 100%; padding: 6px; background:#e74c3c; color:#fff; border:none; border-radius:4px;">キャンセル</button>
+            </div>
+
+            <form id="add-medicine-form">
+              <label for="med-name">薬品名</label>
+              <input type="text" id="med-name" placeholder="例: ロキソニン" required>
+
+              <label for="med-dosage">1回の量・注意点</label>
+              <input type="text" id="med-dosage" placeholder="例: 1錠（毎食後）">
+
+              <label>いつ飲むか（複数選択可）</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
+                <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
+                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
+                <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
+                <label><input type="checkbox" name="med-timing" value="頓服"> 痛むとき（頓服）</label>
+              </div>
+
+              <button type="submit" class="action-btn" style="background:#27ae60; margin-top: 10px;">薬を追加・登録</button>
+            </form>
+
+            <div class="registered-medicines-list" style="margin-top: 15px;">
+              <h4>登録中のお薬</h4>
+              <ul id="medicine-list"></ul>
+            </div>
+
+            <button type="button" id="back-to-step1-btn" style="margin-top: 20px; width: 100%; padding: 10px; background: #7f8c8d; color: white; border: none; border-radius: 4px; font-weight: bold;">⬅ 生活時間設定に戻る</button>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let html5QrCode = null;
+
+      const step1 = document.getElementById('screen-step1');
+      const step2 = document.getElementById('screen-step2');
+      const addPatientForm = document.getElementById('add-patient-form');
+      const patientInput = document.getElementById('patient-name-input');
+      const patientSelect = document.getElementById('patient-select');
+      const targetPatientName = document.getElementById('target-patient-name');
+      const editScheduleForm = document.getElementById('edit-schedule-form');
+      const backBtn = document.getElementById('back-to-step1-btn');
+
+      // 新しい患者名の追加
+      addPatientForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newName = patientInput.value.trim();
+        if (newName) {
+          const option = document.createElement('option');
+          option.value = newName;
+          option.textContent = newName;
+          option.selected = true;
+          patientSelect.appendChild(option);
+          patientInput.value = '';
+        }
+      });
+
+      // 「保存して次へ」ボタンで無条件に画面2へ遷移
+      editScheduleForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // 選択された患者名を表示（未選択の場合は「未指定」）
+        const selectedPatient = patientSelect.value;
+        targetPatientName.textContent = selectedPatient ? selectedPatient : '未指定';
+
+        // 画面切替
+        step1.classList.remove('active');
+        step2.classList.add('active');
+      });
+
+      // 画面1へ戻る
+      backBtn.addEventListener('click', () => {
+        stopScanner();
+        step2.classList.remove('active');
+        step1.classList.add('active');
+      });
+
+      // QR読み取り処理
+      const startBtn = document.getElementById('start-scan-btn');
+      const stopBtn = document.getElementById('stop-scan-btn');
+      const readerContainer = document.getElementById('qr-reader-container');
+
+      startBtn.addEventListener('click', () => {
+        readerContainer.style.display = 'block';
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            parseMedicineQR(decodedText);
+            stopScanner();
+          },
+          () => {}
+        ).catch(err => {
+          alert("カメラの起動に失敗しました: " + err);
+          readerContainer.style.display = 'none';
+        });
+      });
+
+      stopBtn.addEventListener('click', stopScanner);
+
+      function stopScanner() {
+        if (html5QrCode && html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            readerContainer.style.display = 'none';
+          }).catch(() => {
+            readerContainer.style.display = 'none';
+          });
+        } else {
+          readerContainer.style.display = 'none';
+        }
+      }
+
+      function parseMedicineQR(text) {
+        let medName = "";
+        let dosage = "";
+        let timings = [];
+
+        const lines = text.split('\n');
+        let isJahis = false;
+
+        lines.forEach(line => {
+          const cols = line.split(',');
+          if (cols[0] === '201' || cols[0] === '281') {
+            isJahis = true;
+            medName = cols[4] || cols[3] || medName;
+            if (cols[5]) dosage = cols[5] + (cols[6] || '');
+          }
+          if (cols[0] === '301' || cols[0] === '311') {
+            const usageText = cols[4] || '';
+            extractTimings(usageText, timings);
+          }
+        });
+
+        if (!isJahis) {
+          try {
+            const data = JSON.parse(text);
+            medName = data.name || "";
+            dosage = data.dosage || "";
+            if (Array.isArray(data.timing)) timings = data.timing;
+          } catch (e) {
+            medName = text.split(/\s+/)[0] || text;
+            extractTimings(text, timings);
+          }
+        }
+
+        if (medName) document.getElementById('med-name').value = medName;
+        if (dosage) document.getElementById('med-dosage').value = dosage;
+
+        const checkboxes = document.querySelectorAll('input[name="med-timing"]');
+        checkboxes.forEach(cb => {
+          cb.checked = timings.includes(cb.value);
+        });
+
+        alert(`お薬情報を取り込みました:\n薬品名: ${medName || '未取得'}`);
+      }
+
+      function extractTimings(str, targetArray) {
+        if (str.includes('朝')) targetArray.push('朝');
+        if (str.includes('昼')) targetArray.push('昼');
+        if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
+        if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
+        if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
+      }
+
+      document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('med-name').value;
+        const dosage = document.getElementById('med-dosage').value;
+        const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+
+        const li = document.createElement('li');
+        li.textContent = `${name} - ${dosage || '指定なし'} [${checkedTimings.join(', ') || 'タイミング指定なし'}]`;
+        document.getElementById('medicine-list').appendChild(li);
+
+        e.target.reset();
+      });
+    });
+  </script>
+</body>
+</html>
