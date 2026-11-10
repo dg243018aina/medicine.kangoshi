@@ -29,9 +29,10 @@ body {
   position: relative;
 }
 
+/* ヘッダー */
 .app-header {
   background-color: #ffffff;
-  padding: 16px 20px;
+  padding: 18px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -44,9 +45,9 @@ body {
 }
 
 .header-title {
-  font-size: 1.2rem;
+  font-size: 1.4rem; /* 大きめ */
   font-weight: 900;
-  color: #2ecc71;
+  color: #e67e22;
 }
 
 .app-content {
@@ -55,7 +56,7 @@ body {
   background-color: #fcfcfc;
 }
 
-/* 画面切り替え設定（!important で画面切り替えの確実性を向上） */
+/* 画面切り替え表示 */
 .screen {
   display: none !important;
   padding: 20px;
@@ -66,136 +67,141 @@ body {
   display: block !important;
 }
 
-.screen-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+/* 各セクションの見出し */
+h3 {
+  font-size: 1.3rem; /* 大きめ */
+  color: #2c3e50;
+  margin-bottom: 12px;
 }
 
-.screen-header h2 {
-  font-size: 1.4rem;
+h4 {
+  font-size: 1.2rem;
   color: #333;
+  margin-bottom: 8px;
 }
 
-.back-btn {
-  background: #f0f0f0;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  color: #555;
-}
-
-.action-btn {
-  width: 100%;
-  padding: 14px;
-  background: #2ecc71;
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  font-size: 1.1rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.action-btn:active {
-  opacity: 0.8;
-}
-
-/* 患者情報・選択用 */
-.patient-select-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.patient-card-item {
-  background: #fff;
-  border: 2px solid #ddd;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.patient-card-item.active {
-  border-color: #e67e22;
-  background: #fff3e0;
-}
-
-.divider {
-  margin: 20px 0;
-  border: 0;
-  height: 1px;
-  background: #ddd;
-}
-
-/* フォーム関係 */
-#edit-schedule-form, #add-medicine-form, #add-patient-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
+/* ラベル・入力項目 */
 label {
-  font-size: 0.95rem;
+  font-size: 1.1rem; /* 文字サイズ拡大 */
   font-weight: 700;
-  color: #444;
-  margin-top: 5px;
+  color: #333;
+  margin-top: 10px;
+  display: block;
 }
 
-input[type="text"], input[type="time"], select {
+input[type="text"], 
+input[type="time"], 
+select {
   width: 100%;
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  font-size: 1rem;
+  padding: 14px; /* タップしやすく余白を拡大 */
+  border: 2px solid #bdc3c7;
+  border-radius: 12px;
+  font-size: 1.2rem; /* 入力文字サイズ拡大 */
   background: #fff;
+  color: #2c3e50;
+  font-weight: 700;
 }
 
-/* チェックボックスグループ（いつ飲むか） */
+input[type="text"]:focus, 
+input[type="time"]:focus, 
+select:focus {
+  border-color: #e67e22;
+  outline: none;
+}
+
+/* チェックボックス（いつ飲むか） */
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 5px 0 10px 0;
+  gap: 12px;
+  margin: 8px 0 14px 0;
   background: #fff;
-  padding: 10px;
+  padding: 12px;
   border: 2px solid #eee;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .checkbox-group label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.95rem;
+  gap: 6px;
+  font-size: 1.15rem; /* チェック項目文字拡大 */
   margin: 0;
   cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 22px;
+  height: 22px; /* チェックボックス自体も拡大 */
+}
+
+/* ボタン関係 */
+.action-btn {
+  width: 100%;
+  padding: 16px;
+  background: #2ecc71;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.3rem; /* ボタン文字拡大 */
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 患者選択 */
+.patient-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 15px;
+  border: 2px solid #eee;
 }
 
 /* 登録済みお薬リスト */
 #medicine-list {
   list-style: none;
   padding: 0;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 #medicine-list li {
   background: #fff;
-  border: 2px solid #eee;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.95rem;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* 薬品名（かなり大きめに設定） */
+.med-name {
+  font-size: 1.5rem !important; /* 薬品名の文字サイズを大幅拡大 */
+  font-weight: 900;
+  color: #2c3e50;
+  display: block;
+}
+
+/* 1回の量・タイミングの補足文字 */
+.med-info {
+  font-size: 1.1rem;
+  color: #555;
+  font-weight: 700;
+}
+
+/* 区切り線 */
+.divider {
+  margin: 24px 0;
+  border: 0;
+  height: 2px;
+  background: #eee;
 }
 
 /* モーダル・アラート */
