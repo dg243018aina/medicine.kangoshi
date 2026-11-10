@@ -10,6 +10,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
   <!-- QRコード読み取り用ライブラリ -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    /* 画面切り替え用の簡易スタイル */
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
 
@@ -19,13 +28,33 @@
     </header>
 
     <main class="app-content">
-      <section class="screen active">
+      <!-- 画面1: 患者選択 & 生活時間設定 -->
+      <section id="screen-step1" class="screen active">
         <div class="pharmacist-container">
-          <h3>患者選択</h3>
-          <div class="patient-select-list" id="pharmacist-patient-list"></div>
+          
+          <!-- 患者入力・選択エリア -->
+          <div class="patient-section">
+            <h3>患者選択</h3>
+            
+            <form id="add-patient-form" style="margin-bottom: 12px;">
+              <label for="patient-name-input">新規患者登録</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="patient-name-input" placeholder="例: 山田 太郎" style="flex: 1;">
+                <button type="submit" class="action-btn" style="background: #3498db; width: auto; padding: 0 15px;">追加</button>
+              </div>
+            </form>
+
+            <label for="patient-select">対象の患者を選択</label>
+            <select id="patient-select" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
+              <option value="">-- 患者を選択してください --</option>
+              <option value="山田 太郎">山田 太郎</option>
+              <option value="佐藤 花子">佐藤 花子</option>
+            </select>
+          </div>
 
           <hr class="divider">
 
+          <!-- 生活時間設定エリア -->
           <div class="edit-patient-section">
             <h3>生活時間（ご飯・お風呂）の設定</h3>
             <form id="edit-schedule-form">
@@ -41,17 +70,25 @@
               <label for="sched-bath">お風呂</label>
               <input type="time" id="sched-bath" value="17:00">
 
-              <button type="submit" class="action-btn" style="background:#e67e22; margin-top: 10px;">生活時間を保存</button>
+              <button type="submit" class="action-btn" style="background:#e67e22; margin-top: 15px;">保存して次へ（お薬登録） ➔</button>
             </form>
           </div>
 
-          <hr class="divider">
+        </div>
+      </section>
 
-          <!-- 服薬情報の入力・登録セクション -->
+      <!-- 画面2: 服薬情報・QR読み取り -->
+      <section id="screen-step2" class="screen">
+        <div class="pharmacist-container">
+          
+          <!-- 選択中の患者情報表示 -->
+          <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+            <strong>対象患者: </strong><span id="target-patient-name" style="font-weight: bold; color: #e67e22;">未選択</span>
+          </div>
+
           <div class="edit-medicine-section">
             <h3>処方薬・服用タイミングの設定</h3>
 
-            <!-- 手順案内 -->
             <div class="instruction-box" style="background: #f8f9fa; border-left: 4px solid #27ae60; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
               <p style="font-weight: bold; margin: 0 0 5px 0; font-size: 0.9rem;">【お薬登録手順】</p>
               <ol style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #333;">
@@ -61,167 +98,6 @@
               </ol>
             </div>
 
-            <!-- QRスキャナー表示エリア -->
             <button type="button" id="start-scan-btn" class="action-btn" style="background:#2980b9; margin-bottom: 10px;">📷 QRコードから読み込む</button>
             <div id="qr-reader-container" style="display:none; margin-bottom: 15px;">
-              <div id="qr-reader" style="width: 100%;"></div>
-              <button type="button" id="stop-scan-btn" style="margin-top: 5px; width: 100%; padding: 6px; background:#e74c3c; color:#fff; border:none; border-radius:4px;">キャンセル</button>
-            </div>
-
-            <!-- 新しい薬の追加フォーム -->
-            <form id="add-medicine-form">
-              <label for="med-name">薬品名</label>
-              <input type="text" id="med-name" placeholder="例: ロキソニン" required>
-
-              <label for="med-dosage">1回の量・注意点</label>
-              <input type="text" id="med-dosage" placeholder="例: 1錠（毎食後）">
-
-              <label>いつ飲むか（複数選択可）</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
-                <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
-                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
-                <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
-                <label><input type="checkbox" name="med-timing" value="頓服"> 痛むとき（頓服）</label>
-              </div>
-
-              <button type="submit" class="action-btn" style="background:#27ae60; margin-top: 10px;">薬を追加・登録</button>
-            </form>
-
-            <!-- 登録済みのお薬一覧 -->
-            <div class="registered-medicines-list" style="margin-top: 15px;">
-              <h4>登録中のお薬</h4>
-              <ul id="medicine-list"></ul>
-            </div>
-          </div>
-
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      let html5QrCode = null;
-
-      const startBtn = document.getElementById('start-scan-btn');
-      const stopBtn = document.getElementById('stop-scan-btn');
-      const readerContainer = document.getElementById('qr-reader-container');
-
-      // QR読み取り開始
-      startBtn.addEventListener('click', () => {
-        readerContainer.style.display = 'block';
-        if (!html5QrCode) {
-          html5QrCode = new Html5Qrcode("qr-reader");
-        }
-
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decodedText) => {
-            // スキャン成功時の解析処理
-            parseMedicineQR(decodedText);
-            stopScanner();
-          },
-          (errorMessage) => {
-            // エラー無視（継続スキャン）
-          }
-        ).catch(err => {
-          alert("カメラの起動に失敗しました: " + err);
-          readerContainer.style.display = 'none';
-        });
-      });
-
-      // QR読み取り停止
-      stopBtn.addEventListener('click', stopScanner);
-
-      function stopScanner() {
-        if (html5QrCode && html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => {
-            readerContainer.style.display = 'none';
-          }).catch(err => {
-            readerContainer.style.display = 'none';
-          });
-        } else {
-          readerContainer.style.display = 'none';
-        }
-      }
-
-      // QRコードの文字列を解析してフォームにセットする関数
-      function parseMedicineQR(text) {
-        let medName = "";
-        let dosage = "";
-        let timings = [];
-
-        // JAHIS調剤明細フォーマット（カンマ区切りテキスト）または一般文字列を判定
-        const lines = text.split('\n');
-        let isJahis = false;
-
-        lines.forEach(line => {
-          const cols = line.split(',');
-          // JAHIS形式: Record No 201（薬品名）などの判定
-          if (cols[0] === '201' || cols[0] === '281') {
-            isJahis = true;
-            medName = cols[4] || cols[3] || medName;
-            if (cols[5]) dosage = cols[5] + (cols[6] || '');
-          }
-          if (cols[0] === '301' || cols[0] === '311') { // 用法
-            const usageText = cols[4] || '';
-            extractTimings(usageText, timings);
-          }
-        });
-
-        // 一般的な文字列・JSONの場合のフォールバック
-        if (!isJahis) {
-          try {
-            const data = JSON.parse(text);
-            medName = data.name || "";
-            dosage = data.dosage || "";
-            if (Array.isArray(data.timing)) timings = data.timing;
-          } catch (e) {
-            // プレーンテキスト（例: "ロキソニン 1錠 朝 昼"）
-            medName = text.split(/\s+/)[0] || text;
-            extractTimings(text, timings);
-          }
-        }
-
-        // フォームへの自動入力
-        if (medName) document.getElementById('med-name').value = medName;
-        if (dosage) document.getElementById('med-dosage').value = dosage;
-
-        // チェックボックスのリセット＆適用
-        const checkboxes = document.querySelectorAll('input[name="med-timing"]');
-        checkboxes.forEach(cb => {
-          cb.checked = timings.includes(cb.value);
-        });
-
-        alert(`お薬情報を取り込みました:\n薬品名: ${medName || '未取得'}`);
-      }
-
-      // テキスト内から「朝」「昼」「夕」「就寝前」「頓服」キーワードを判定
-      function extractTimings(str, targetArray) {
-        if (str.includes('朝')) targetArray.push('朝');
-        if (str.includes('昼')) targetArray.push('昼');
-        if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
-        if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
-        if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
-      }
-
-      // フォーム送信（お薬リストへの追加）
-      document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('med-name').value;
-        const dosage = document.getElementById('med-dosage').value;
-        const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
-
-        const li = document.createElement('li');
-        li.textContent = `${name} - ${dosage || '指定なし'} [${checkedTimings.join(', ') || 'タイミング指定なし'}]`;
-        document.getElementById('medicine-list').appendChild(li);
-
-        // フォームリセット
-        e.target.reset();
-      });
-    });
-  </script>
-</body>
-</html>
+              <div id="qr-reader" style="width:
