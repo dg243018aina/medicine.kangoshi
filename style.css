@@ -29,6 +29,7 @@ body {
   position: relative;
 }
 
+/* ヘッダー */
 .app-header {
   background-color: #ffffff;
   padding: 16px 20px;
@@ -46,7 +47,7 @@ body {
 .header-title {
   font-size: 1.2rem;
   font-weight: 900;
-  color: #2ecc71;
+  color: #e67e22;
 }
 
 .app-content {
@@ -55,7 +56,7 @@ body {
   background-color: #fcfcfc;
 }
 
-/* 画面切り替え設定（!important で画面切り替えの確実性を向上） */
+/* 画面切り替え表示 */
 .screen {
   display: none !important;
   padding: 20px;
@@ -66,68 +67,87 @@ body {
   display: block !important;
 }
 
-.screen-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+/* 見出し */
+h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #2c3e50;
+  margin-bottom: 10px;
 }
 
-.screen-header h2 {
-  font-size: 1.4rem;
-  color: #333;
-}
-
-.back-btn {
-  background: #f0f0f0;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 12px;
+h4 {
+  font-size: 1.05rem;
   font-weight: 700;
-  cursor: pointer;
-  color: #555;
+  color: #333;
+  margin-bottom: 8px;
 }
 
-.action-btn {
+/* ラベル・フォーム入力欄（1枚目・2枚目共通で統一） */
+label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #444;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+input[type="text"], 
+input[type="time"], 
+select {
   width: 100%;
-  padding: 14px;
-  background: #2ecc71;
+  padding: 10px 12px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #fff;
+  color: #2c3e50;
+}
+
+input[type="text"]:focus, 
+input[type="time"]:focus, 
+select:focus {
+  border-color: #e67e22;
+  outline: none;
+}
+
+/* 1枚目：新規患者追加の横並びレイアウト */
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.input-row input {
+  flex: 1;
+}
+
+.add-patient-btn {
+  background: #3498db;
   color: #fff;
   border: none;
-  border-radius: 14px;
-  font-size: 1.1rem;
-  font-weight: 900;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
+  white-space: nowrap;
 }
 
-.action-btn:active {
+.add-patient-btn:active {
   opacity: 0.8;
 }
 
-/* 患者情報・選択用 */
-.patient-select-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.patient-card-item {
+/* 患者選択カード枠 */
+.patient-section {
   background: #fff;
-  border: 2px solid #ddd;
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
+  border-radius: 14px;
+  padding: 14px;
+  border: 2px solid #eee;
 }
 
-.patient-card-item.active {
-  border-color: #e67e22;
-  background: #fff3e0;
-}
-
+/* 区切り線 */
 .divider {
   margin: 20px 0;
   border: 0;
@@ -135,37 +155,88 @@ body {
   background: #ddd;
 }
 
-/* フォーム関係 */
-#edit-schedule-form, #add-medicine-form, #add-patient-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* メインアクションボタン */
+.action-btn {
+  width: 100%;
+  padding: 14px;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: opacity 0.2s;
 }
 
-label {
+.action-btn:active {
+  opacity: 0.8;
+}
+
+.btn-orange { background: #e67e22; }
+.btn-blue   { background: #2980b9; margin-top: 0; margin-bottom: 12px; }
+.btn-green  { background: #27ae60; }
+
+/* 2枚目：対象患者表示ボックス */
+.target-patient-box {
+  background: #fff3e0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ffe0b2;
+  font-size: 1rem;
+}
+
+.target-patient-box span {
+  font-weight: 900;
+  color: #e67e22;
+}
+
+/* 2枚目：手順案内ボックス */
+.instruction-box {
+  background: #f8f9fa;
+  border-left: 4px solid #27ae60;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+}
+
+.instruction-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.instruction-box ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+.cancel-scan-btn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 8px;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #444;
-  margin-top: 5px;
+  cursor: pointer;
 }
 
-input[type="text"], input[type="time"], select {
-  width: 100%;
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  font-size: 1rem;
-  background: #fff;
-}
-
-/* チェックボックスグループ（いつ飲むか） */
+/* チェックボックス（いつ飲むか） */
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 5px 0 10px 0;
+  gap: 10px;
+  margin: 4px 0 8px 0;
   background: #fff;
-  padding: 10px;
+  padding: 10px 12px;
   border: 2px solid #eee;
   border-radius: 10px;
 }
@@ -179,11 +250,20 @@ input[type="text"], input[type="time"], select {
   cursor: pointer;
 }
 
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
 /* 登録済みお薬リスト */
+.registered-medicines-list {
+  margin-top: 20px;
+}
+
 #medicine-list {
   list-style: none;
   padding: 0;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 #medicine-list li {
@@ -193,34 +273,36 @@ input[type="text"], input[type="time"], select {
   padding: 10px 12px;
   margin-bottom: 8px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.95rem;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* モーダル・アラート */
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 20px;
+.med-name {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #2c3e50;
+  display: block;
 }
 
-.alarm-content {
-  background: #fff;
-  border-radius: 24px;
-  padding: 30px 20px;
+.med-info {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* 戻るボタン */
+.back-step-btn {
+  margin-top: 20px;
   width: 100%;
-  text-align: center;
+  padding: 12px;
+  background: #7f8c8d;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.hidden {
-  display: none !important;
+.back-step-btn:active {
+  opacity: 0.8;
 }
