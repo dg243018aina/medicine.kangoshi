@@ -77,10 +77,6 @@
           <div class="edit-medicine-section">
             <h3>処方薬・服用タイミングの設定</h3>
 
-            <div class="instruction-box">
-              <strong>【手順】</strong> ①QRまたは手入力でセット → ②タイミング確認 → ③「薬を追加・登録」
-            </div>
-
             <button type="button" id="start-scan-btn" class="action-btn btn-blue">📷 QRコードから読み込む</button>
             <div id="qr-reader-container">
               <div id="qr-reader"></div>
@@ -92,13 +88,16 @@
               <input type="text" id="med-name" placeholder="例: ロキソニン" required>
 
               <label for="med-dosage">1回の量・注意点</label>
-              <input type="text" id="med-dosage" placeholder="例: 1錠（毎食後）">
+              <input type="text" id="med-dosage" placeholder="例: 1錠（水またはぬるま湯で）">
 
               <label>いつ飲むか（複数選択可）</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
-                <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
-                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
+              <div class="checkbox-grid">
+                <label><input type="checkbox" name="med-timing" value="朝食前"> 朝食前</label>
+                <label><input type="checkbox" name="med-timing" value="朝食後"> 朝食後</label>
+                <label><input type="checkbox" name="med-timing" value="昼食前"> 昼食前</label>
+                <label><input type="checkbox" name="med-timing" value="昼食後"> 昼食後</label>
+                <label><input type="checkbox" name="med-timing" value="夕食前"> 夕食前</label>
+                <label><input type="checkbox" name="med-timing" value="夕食後"> 夕食後</label>
                 <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
                 <label><input type="checkbox" name="med-timing" value="頓服"> 頓服</label>
               </div>
@@ -111,8 +110,7 @@
               <ul id="medicine-list"></ul>
             </div>
 
-            <!-- 1患者として保存完了し診察画面へ移動 -->
-            <button type="button" id="complete-patient-btn" class="action-btn btn-orange" style="margin-top: 12px;">✅ 患者データを確定して診察画面を見る</button>
+            <button type="button" id="complete-patient-btn" class="action-btn btn-orange" style="margin-top: 10px;">✅ 患者データを確定して診察画面を見る</button>
             <button type="button" id="back-to-step1-btn" class="back-step-btn">⬅ 患者・生活時間設定に戻る</button>
           </div>
 
