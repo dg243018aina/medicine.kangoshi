@@ -27,16 +27,16 @@
           <div class="patient-section">
             <h3>患者選択</h3>
             
-            <form id="add-patient-form" style="margin-bottom: 12px;">
+            <form id="add-patient-form">
               <label for="patient-name-input">新規患者登録</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="text" id="patient-name-input" placeholder="例: 山田 太郎" style="flex: 1;">
-                <button type="submit" class="action-btn" style="background: #3498db; width: auto; padding: 0 15px;">追加</button>
+              <div class="input-row">
+                <input type="text" id="patient-name-input" placeholder="例: 山田 太郎">
+                <button type="submit" class="add-patient-btn">追加</button>
               </div>
             </form>
 
             <label for="patient-select">対象の患者を選択</label>
-            <select id="patient-select" style="margin-bottom: 10px;">
+            <select id="patient-select">
               <option value="">-- 患者を選択してください --</option>
             </select>
           </div>
@@ -59,7 +59,7 @@
               <label for="sched-bath">お風呂</label>
               <input type="time" id="sched-bath" value="17:00">
 
-              <button type="submit" class="action-btn" style="background:#e67e22; margin-top: 15px;">保存して次へ（お薬登録） ➔</button>
+              <button type="submit" class="action-btn btn-orange">保存して次へ（お薬登録） ➔</button>
             </form>
           </div>
 
@@ -71,8 +71,224 @@
         <div class="pharmacist-container">
           
           <!-- 選択中の患者情報表示 -->
-          <div style="background: #fff3e0; padding: 10px 14px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ffe0b2;">
-            <strong>対象患者: </strong><span id="target-patient-name" style="font-weight: 900; color: #e67e22;">未指定</span>
+          <div class="target-patient-box">
+            <strong>対象患者: </strong><span id="target-patient-name">未指定</span>
           </div>
 
-          <div class="edit-medicine-section
+          <div class="edit-medicine-section">
+            <h3>処方薬・服用タイミングの設定</h3>
+
+            <div class="instruction-box">
+              <p class="instruction-title">【お薬登録手順】</p>
+              <ol>
+                <li>「QR読み取り」または手入力で薬品情報をセットします。</li>
+                <li>服用タイミングを確認・変更します。</li>
+                <li>「薬を追加・登録」を押すと下の登録リストに反映されます。</li>
+              </ol>
+            </div>
+
+            <button type="button" id="start-scan-btn" class="action-btn btn-blue">📷 QRコードから読み込む</button>
+            <div id="qr-reader-container" style="display:none; margin-bottom: 15px;">
+              <div id="qr-reader" style="width: 100%;"></div>
+              <button type="button" id="stop-scan-btn" class="cancel-scan-btn">キャンセル</button>
+            </div>
+
+            <form id="add-medicine-form">
+              <label for="med-name">薬品名</label>
+              <input type="text" id="med-name" placeholder="例: ロキソニン" required>
+
+              <label for="med-dosage">1回の量・注意点</label>
+              <input type="text" id="med-dosage" placeholder="例: 1錠（毎食後）">
+
+              <label>いつ飲むか（複数選択可）</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
+                <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
+                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
+                <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
+                <label><input type="checkbox" name="med-timing" value="頓服"> 痛むとき（頓服）</label>
+              </div>
+
+              <button type="submit" class="action-btn btn-green">薬を追加・登録</button>
+            </form>
+
+            <div class="registered-medicines-list">
+              <h4>登録中のお薬</h4>
+              <ul id="medicine-list"></ul>
+            </div>
+
+            <button type="button" id="back-to-step1-btn" class="back-step-btn">⬅ 生活時間設定に戻る</button>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const defaultData = {
+      coins: 11,
+      love: 100,
+      currentPatientId: 1,
+      patients: [
+        {
+          id: 1,
+          name: '眞野 宏太',
+          age: 86,
+          schedule: [
+            { label: '朝ごはん', time: '07:00' },
+            { label: '昼ごはん', time: '12:00' },
+            { label: '晩ごはん', time: '19:00' },
+            { label: 'お風呂', time: '17:00' }
+          ],
+          meds: [
+            { name: 'ロキソニン', dosage: '1錠（毎食後）', timing: ['朝', '昼', '夕'] },
+            { name: '軟膏(塗り薬)', dosage: '適量', timing: ['朝', '就寝前'] }
+          ]
+        }
+      ]
+    };
+
+    function getData() {
+      const saved = localStorage.getItem('brain_med_app_data');
+      return saved ? JSON.parse(saved) : defaultData;
+    }
+
+    function saveData(data) {
+      localStorage.setItem('brain_med_app_data', JSON.stringify(data));
+    }
+
+    let appData = getData();
+    let html5QrCode = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const step1 = document.getElementById('screen-step1');
+      const step2 = document.getElementById('screen-step2');
+      const addPatientForm = document.getElementById('add-patient-form');
+      const patientInput = document.getElementById('patient-name-input');
+      const patientSelect = document.getElementById('patient-select');
+      const targetPatientName = document.getElementById('target-patient-name');
+      const editScheduleForm = document.getElementById('edit-schedule-form');
+      const backBtn = document.getElementById('back-to-step1-btn');
+      const medicineList = document.getElementById('medicine-list');
+
+      renderPatientSelect();
+      loadCurrentSchedule();
+
+      addPatientForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = patientInput.value.trim();
+        if (!name) return;
+
+        const newPatient = {
+          id: Date.now(),
+          name: name,
+          age: 80,
+          schedule: [
+            { label: '朝ごはん', time: '07:00' },
+            { label: '昼ごはん', time: '12:00' },
+            { label: '晩ごはん', time: '19:00' },
+            { label: 'お風呂', time: '17:00' }
+          ],
+          meds: []
+        };
+
+        appData.patients.push(newPatient);
+        appData.currentPatientId = newPatient.id;
+        saveData(appData);
+
+        renderPatientSelect();
+        loadCurrentSchedule();
+        patientInput.value = '';
+        alert(`「${name}」様を新しく追加登録しました。`);
+      });
+
+      patientSelect.addEventListener('change', (e) => {
+        const selectedId = parseInt(e.target.value);
+        if (selectedId) {
+          appData.currentPatientId = selectedId;
+          saveData(appData);
+          loadCurrentSchedule();
+        }
+      });
+
+      editScheduleForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        let patient = appData.patients.find(p => p.id === appData.currentPatientId);
+        if (!patient && appData.patients.length > 0) {
+          patient = appData.patients[0];
+          appData.currentPatientId = patient.id;
+        }
+
+        if (patient) {
+          patient.schedule = [
+            { label: '朝ごはん', time: document.getElementById('sched-bf').value || '07:00' },
+            { label: '昼ごはん', time: document.getElementById('sched-lunch').value || '12:00' },
+            { label: '晩ごはん', time: document.getElementById('sched-dinner').value || '19:00' },
+            { label: 'お風呂', time: document.getElementById('sched-bath').value || '17:00' }
+          ];
+          saveData(appData);
+          targetPatientName.textContent = patient.name;
+        } else {
+          targetPatientName.textContent = '未指定';
+        }
+
+        renderMedicineList();
+
+        step1.classList.remove('active');
+        step2.classList.add('active');
+      });
+
+      backBtn.addEventListener('click', () => {
+        stopScanner();
+        step2.classList.remove('active');
+        step1.classList.add('active');
+      });
+
+      document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('med-name').value;
+        const dosage = document.getElementById('med-dosage').value;
+        const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+
+        const patient = appData.patients.find(p => p.id === appData.currentPatientId);
+        if (patient) {
+          patient.meds.push({
+            name: name,
+            dosage: dosage || '指定なし',
+            timing: checkedTimings
+          });
+          saveData(appData);
+          renderMedicineList();
+          alert(`「${name}」を登録しました。`);
+        }
+
+        e.target.reset();
+      });
+
+      const startBtn = document.getElementById('start-scan-btn');
+      const stopBtn = document.getElementById('stop-scan-btn');
+      const readerContainer = document.getElementById('qr-reader-container');
+
+      startBtn.addEventListener('click', () => {
+        readerContainer.style.display = 'block';
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            parseMedicineQR(decodedText);
+            stopScanner();
+          },
+          () => {}
+        ).catch(err => {
+          alert("カメラの起動に失敗しました: " + err);
+          readerContainer.style.display = 'none';
+        });
+      });
+
+      stopBtn.addEventListener('click', stopScanner);
