@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 画面要素の取得
   const step1 = document.getElementById('screen-step1');
   const step2 = document.getElementById('screen-step2');
-  const addPatientForm = document.getElementById('add-patient-form');
   const patientInput = document.getElementById('patient-name-input');
   const patientSelect = document.getElementById('patient-select');
   const targetPatientName = document.getElementById('target-patient-name');
@@ -50,53 +49,44 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPatientSelect();
   loadCurrentSchedule();
 
-  // 1. 新規患者登録
-  addPatientForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = patientInput.value.trim();
-    if (!name) return;
-
-    const newPatient = {
-      id: Date.now(),
-      name: name,
-      age: 80, // 初期値
-      schedule: [
-        { label: '朝ごはん', time: '07:00' },
-        { label: '昼ごはん', time: '12:00' },
-        { label: '晩ごはん', time: '19:00' },
-        { label: 'お風呂', time: '17:00' }
-      ],
-      meds: []
-    };
-
-    appData.patients.push(newPatient);
-    appData.currentPatientId = newPatient.id;
-    saveData(appData);
-
-    renderPatientSelect();
-    loadCurrentSchedule();
-    patientInput.value = '';
-    alert(`「${name}」様を新しく追加登録しました。`);
-  });
-
-  // 2. 患者選択ドロップダウン変更時
+  // 1. 患者選択ドロップダウン変更時（既存患者を選んだら新規入力欄をクリア）
   patientSelect.addEventListener('change', (e) => {
-    const selectedId = parseInt(e.target.value);
+    const selectedId = parseInt(e.target.value, 10);
     if (selectedId) {
       appData.currentPatientId = selectedId;
+      if (patientInput) patientInput.value = '';
       saveData(appData);
       loadCurrentSchedule();
     }
   });
 
-  // 3. 生活時間保存 & 画面2への遷移
+  // 2. 生活時間保存 & 新規患者があれば登録して画面2への遷移
   editScheduleForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    let patient = appData.patients.find(p => p.id === appData.currentPatientId);
-    if (!patient && appData.patients.length > 0) {
-      patient = appData.patients[0];
+    const newName = patientInput ? patientInput.value.trim() : '';
+    let patient = null;
+
+    if (newName) {
+      // 新規患者名が入力されている場合は新しく作成して選択状態にする
+      patient = {
+        id: Date.now(),
+        name: newName,
+        age: 80, // 初期値
+        schedule: [],
+        meds: []
+      };
+      appData.patients.push(patient);
       appData.currentPatientId = patient.id;
+      patientInput.value = '';
+      renderPatientSelect();
+    } else {
+      // 既存の選択された患者を取得
+      patient = appData.patients.find(p => p.id === appData.currentPatientId);
+      if (!patient && appData.patients.length > 0) {
+        patient = appData.patients[0];
+        appData.currentPatientId = patient.id;
+      }
     }
 
     if (patient) {
@@ -119,17 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
     step2.classList.add('active');
   });
 
-  // 4. 画面2から画面1へ戻る
+  // 3. 画面2から画面1へ戻る
   backBtn.addEventListener('click', () => {
     stopScanner();
     step2.classList.remove('active');
     step1.classList.add('active');
   });
 
-  // 5. お薬追加フォーム送信
+  // 4. お薬追加フォーム送信
   document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = document.getElementById('med-name').value;
+    const name = cleanProductName(document.getElementById('med-name').value);
     const dosage = document.getElementById('med-dosage').value;
     const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
 
@@ -148,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  // 6. QR読み取り制御
+  // 5. QR読み取り制御
   const startBtn = document.getElementById('start-scan-btn');
   const stopBtn = document.getElementById('stop-scan-btn');
   const readerContainer = document.getElementById('qr-reader-container');
@@ -161,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
       (decodedText) => {
         parseMedicineQR(decodedText);
         stopScanner();
@@ -188,6 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- ヘルパー関数群 ---
+
+  // URL除去用関数
+  function cleanProductName(text) {
+    return text.replace(/(https?:\/\/[^\s]+|www\.[^\s]+)/g, '').trim();
+  }
 
   // 患者選択プルダウンの更新
   function renderPatientSelect() {
@@ -221,10 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const patient = appData.patients.find(p => p.id === appData.currentPatientId);
     if (!patient || !patient.meds) return;
 
-    patient.meds.forEach((med, index) => {
+    patient.meds.forEach((med) => {
       const li = document.createElement('li');
       const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join(', ') : 'タイミング指定なし';
-      li.style.marginBottom = '6px';
+      li.style.marginBottom = '4px';
       li.innerHTML = `<strong>${med.name}</strong> - ${med.dosage} [${timingsStr}]`;
       medicineList.appendChild(li);
     });
@@ -263,6 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         extractTimings(text, timings);
       }
     }
+
+    medName = cleanProductName(medName);
 
     if (medName) document.getElementById('med-name').value = medName;
     if (dosage) document.getElementById('med-dosage').value = dosage;
