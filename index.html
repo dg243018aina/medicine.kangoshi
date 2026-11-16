@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-  <!-- QRコード読み取り用ライブラリ -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
@@ -16,6 +15,7 @@
   <div class="phone-frame">
     <header class="app-header">
       <div class="header-title">看護師 管理ポータル</div>
+      <button type="button" id="header-carte-btn" class="header-mini-btn">📋 診察カルテ</button>
     </header>
 
     <main class="app-content">
@@ -24,9 +24,9 @@
         <div class="pharmacist-container">
           
           <div class="patient-section">
-            <h3>1. 患者選択・新規入力</h3>
+            <h3>1. 患者の入力・選択</h3>
             
-            <label for="patient-name-input">新規患者登録（新しく入力する場合）</label>
+            <label for="patient-name-input">新規患者名（新しく登録する場合）</label>
             <input type="text" id="patient-name-input" placeholder="例: 山田 太郎">
 
             <label for="patient-select">または登録済みの患者から選択</label>
@@ -59,7 +59,7 @@
                 </div>
               </div>
 
-              <button type="submit" id="next-step-btn" class="action-btn btn-orange">保存して次へ（お薬登録） ➔</button>
+              <button type="submit" id="next-step-btn" class="action-btn btn-orange">次へ（お薬登録） ➔</button>
             </form>
           </div>
 
@@ -103,17 +103,54 @@
                 <label><input type="checkbox" name="med-timing" value="頓服"> 頓服</label>
               </div>
 
-              <button type="submit" class="action-btn btn-green">薬を追加・登録</button>
+              <button type="submit" class="action-btn btn-green">＋ この薬をリストに追加</button>
             </form>
 
             <div class="registered-medicines-list">
-              <h4>登録中のお薬</h4>
+              <h4>登録予定のお薬</h4>
               <ul id="medicine-list"></ul>
             </div>
 
+            <!-- 1患者として保存完了し診察画面へ移動 -->
+            <button type="button" id="complete-patient-btn" class="action-btn btn-orange" style="margin-top: 12px;">✅ 患者データを確定して診察画面を見る</button>
             <button type="button" id="back-to-step1-btn" class="back-step-btn">⬅ 患者・生活時間設定に戻る</button>
           </div>
 
+        </div>
+      </section>
+
+      <!-- 画面3: 仮の診察・カルテ画面 -->
+      <section id="screen-carte" class="screen">
+        <div class="carte-container">
+          <div class="carte-header-badge">🩺 診察・服薬カルテ確認（仮）</div>
+
+          <label for="carte-patient-select">表示する患者を切り替え</label>
+          <select id="carte-patient-select"></select>
+
+          <div class="carte-card">
+            <div class="carte-patient-title">
+              <span id="carte-name">---</span> 様
+              <span class="carte-sub" id="carte-date">登録日: ---</span>
+            </div>
+
+            <div class="carte-section">
+              <h4>⏰ 生活スケジュール</h4>
+              <div class="carte-schedule-grid" id="carte-schedule-list"></div>
+            </div>
+
+            <div class="carte-section">
+              <h4>💊 処方薬・服用タイミング</h4>
+              <ul class="carte-med-list" id="carte-med-list"></ul>
+            </div>
+
+            <div class="carte-section">
+              <h4>📝 診察メモ（仮入力）</h4>
+              <textarea id="carte-memo" rows="2" placeholder="診察時の所見や申し送り事項を入力..."></textarea>
+              <button type="button" id="save-memo-btn" class="action-btn btn-blue" style="margin-top: 6px; padding: 6px;">メモを保存</button>
+            </div>
+          </div>
+
+          <button type="button" id="new-register-btn" class="action-btn btn-green">＋ 新しい患者・お薬を登録する</button>
         </div>
       </section>
     </main>
