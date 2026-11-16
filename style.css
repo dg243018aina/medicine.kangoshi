@@ -17,34 +17,34 @@ body {
 .phone-frame {
   width: 100%;
   max-width: 430px;
-  height: 92vh;
-  max-height: 880px;
+  height: 94vh;
+  max-height: 840px;
   background-color: #ffffff;
-  border-radius: 36px;
+  border-radius: 32px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 8px solid #1a252f;
+  border: 6px solid #1a252f;
   position: relative;
 }
 
 .app-header {
   background-color: #ffffff;
-  padding: 16px 20px;
+  padding: 10px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .admin-header {
   background-color: #fffaf0;
-  border-bottom: 2px solid #ffe0b2;
+  border-bottom: 1px solid #ffe0b2;
 }
 
 .header-title {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 900;
   color: #e67e22;
 }
@@ -55,10 +55,10 @@ body {
   background-color: #fcfcfc;
 }
 
-/* 画面切り替え（元のCSSのpadding: 20pxを維持） */
+/* 画面切り替え（スクロール不要にするため余白を縮小） */
 .screen {
   display: none !important;
-  padding: 20px;
+  padding: 12px 16px;
   min-height: 100%;
 }
 
@@ -67,28 +67,28 @@ body {
   flex-direction: column;
 }
 
-/* 見出しサイズ（元のバランスに統一） */
+/* 見出しサイズ（コンパクト化） */
 .pharmacist-container h3 {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .pharmacist-container h4 {
-  font-size: 1.05rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #555;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-/* フォーム内のラベル・入力枠（元の #edit-schedule-form と同じ大きさ） */
+/* フォーム内のラベル・入力枠（コンパクト化） */
 .pharmacist-container label {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #444;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  margin-top: 5px;
+  margin-bottom: 2px;
   display: block;
 }
 
@@ -96,72 +96,57 @@ body {
 .pharmacist-container input[type="time"],
 .pharmacist-container select {
   width: 100%;
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  font-size: 1rem;
-  margin-bottom: 5px;
+  padding: 6px 8px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
   background-color: #fff;
   color: #333;
+  user-select: text;
 }
 
-/* 新規患者登録の横並び部分 */
-.input-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+/* 生活時間の2列グリッド配置（縦幅節約） */
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
 }
 
-.input-row input[type="text"] {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.add-patient-btn {
-  padding: 10px 16px;
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* 区切り線（元のCSSのまま） */
+/* 区切り線 */
 .divider {
-  margin: 20px 0;
+  margin: 10px 0;
   border: 0;
   height: 1px;
   background: #ddd;
 }
 
-/* アクションボタン（元の .action-btn のサイズに統一） */
+/* アクションボタン（コンパクト化） */
 .action-btn {
   width: 100%;
-  padding: 14px;
+  padding: 10px;
   background: #2ecc71;
   color: #fff;
   border: none;
-  border-radius: 14px;
-  font-size: 1.1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-weight: 900;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .btn-orange { background-color: #e67e22; }
-.btn-blue   { background-color: #2980b9; margin-top: 0; margin-bottom: 12px; }
-.btn-green  { background-color: #27ae60; }
+.btn-blue   { background-color: #2980b9; margin-top: 0; margin-bottom: 8px; padding: 8px; font-size: 0.85rem; }
+.btn-green  { background-color: #27ae60; padding: 9px; font-size: 0.9rem; }
 
 /* 2枚目：対象患者表示 */
 .target-patient-box {
   background: #fff3e0;
-  border: 2px solid #ffe0b2;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 15px;
-  font-size: 1rem;
+  border: 1.5px solid #ffe0b2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
   color: #333;
 }
 
@@ -173,35 +158,35 @@ body {
 /* 2枚目：手順案内ボックス */
 .instruction-box {
   background: #f8f9fa;
-  border-left: 4px solid #27ae60;
-  padding: 10px 12px;
-  margin-bottom: 15px;
-  border-radius: 6px;
+  border-left: 3px solid #27ae60;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
 }
 
 .instruction-title {
   font-weight: 700;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
   color: #333;
 }
 
 .instruction-box ol {
-  padding-left: 18px;
-  font-size: 0.85rem;
+  padding-left: 16px;
+  font-size: 0.75rem;
   color: #555;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .cancel-scan-btn {
-  margin-top: 6px;
+  margin-top: 4px;
   width: 100%;
-  padding: 8px;
+  padding: 6px;
   background: #e74c3c;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -210,62 +195,55 @@ body {
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
+  gap: 6px;
+  padding: 6px 8px;
   background: #fff;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  margin-bottom: 8px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 6px;
 }
 
 .checkbox-group label {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   margin: 0;
   cursor: pointer;
 }
 
-/* 登録済みお薬リスト（元の .med-item / .med-name のバランスに統一） */
+/* 登録済みお薬リスト */
 .registered-medicines-list {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 #medicine-list {
   list-style: none;
+  max-height: 90px;
+  overflow-y: auto;
 }
 
 #medicine-list li {
   background: #fff;
-  border: 2px solid #eee;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border: 1.5px solid #eee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
 }
 
 .med-name {
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   font-weight: 900;
   color: #333;
   display: block;
 }
 
 .med-info {
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   color: #666;
 }
 
-/* 戻るボタン（元の .back-btn と同じサイズ感） */
+/* 戻るボタン */
 .back-step-btn {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  background: #f0f0f0;
-  color: #555;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
+  margin-top: 1
