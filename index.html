@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>看護師用 管理ポータル</title>
-  <link rel="stylesheet" href="style.css">
+  <title>薬剤師・看護師 管理ポータル</title>
+  <link rel="stylesheet" href="pharmacist.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 
   <div class="phone-frame">
     <header class="app-header">
-      <div class="header-title">看護師 管理ポータル</div>
+      <div class="header-title">薬剤師 管理ポータル</div>
       <button type="button" id="header-carte-btn" class="header-mini-btn">📋 診察カルテ</button>
     </header>
 
@@ -26,7 +26,7 @@
           <div class="patient-section">
             <h3>1. 患者の入力・選択</h3>
             
-            <label for="patient-name-input">新規患者名（新しく登録する場合）</label>
+            <label for="patient-name-input">新規患者名（新しく登録してIDを発行する場合）</label>
             <input type="text" id="patient-name-input" placeholder="例: 山田 太郎">
 
             <label for="patient-select">または登録済みの患者から選択</label>
@@ -71,11 +71,16 @@
         <div class="pharmacist-container">
           
           <div class="target-patient-box">
-            <strong>対象患者: </strong><span id="target-patient-name">未指定</span>
+            <div><strong>対象患者: </strong><span id="target-patient-name">未指定</span></div>
+            <div class="target-id-line">発行ID: <strong id="target-patient-id">----</strong></div>
           </div>
 
           <div class="edit-medicine-section">
             <h3>処方薬・服用タイミングの設定</h3>
+
+            <div class="instruction-box">
+              <strong>【手順】</strong> ①QRまたは手入力でセット → ②タイミング確認 → ③「この薬をリストに追加」
+            </div>
 
             <button type="button" id="start-scan-btn" class="action-btn btn-blue">📷 QRコードから読み込む</button>
             <div id="qr-reader-container">
@@ -88,16 +93,13 @@
               <input type="text" id="med-name" placeholder="例: ロキソニン" required>
 
               <label for="med-dosage">1回の量・注意点</label>
-              <input type="text" id="med-dosage" placeholder="例: 1錠（水またはぬるま湯で）">
+              <input type="text" id="med-dosage" placeholder="例: 1錠（毎食後）">
 
               <label>いつ飲むか（複数選択可）</label>
-              <div class="checkbox-grid">
-                <label><input type="checkbox" name="med-timing" value="朝食前"> 朝食前</label>
-                <label><input type="checkbox" name="med-timing" value="朝食後"> 朝食後</label>
-                <label><input type="checkbox" name="med-timing" value="昼食前"> 昼食前</label>
-                <label><input type="checkbox" name="med-timing" value="昼食後"> 昼食後</label>
-                <label><input type="checkbox" name="med-timing" value="夕食前"> 夕食前</label>
-                <label><input type="checkbox" name="med-timing" value="夕食後"> 夕食後</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" name="med-timing" value="朝"> 朝</label>
+                <label><input type="checkbox" name="med-timing" value="昼"> 昼</label>
+                <label><input type="checkbox" name="med-timing" value="夕"> 夕</label>
                 <label><input type="checkbox" name="med-timing" value="就寝前"> 就寝前</label>
                 <label><input type="checkbox" name="med-timing" value="頓服"> 頓服</label>
               </div>
@@ -110,20 +112,27 @@
               <ul id="medicine-list"></ul>
             </div>
 
-            <button type="button" id="complete-patient-btn" class="action-btn btn-orange" style="margin-top: 10px;">✅ 患者データを確定して診察画面を見る</button>
+            <button type="button" id="complete-patient-btn" class="action-btn btn-orange" style="margin-top: 12px;">✅ 患者データを確定してIDを発行する</button>
             <button type="button" id="back-to-step1-btn" class="back-step-btn">⬅ 患者・生活時間設定に戻る</button>
           </div>
 
         </div>
       </section>
 
-      <!-- 画面3: 仮の診察・カルテ画面 -->
+      <!-- 画面3: 診察カルテ & 患者ID案内画面 -->
       <section id="screen-carte" class="screen">
         <div class="carte-container">
-          <div class="carte-header-badge">🩺 診察・服薬カルテ確認（仮）</div>
+          <div class="carte-header-badge">🩺 診察・服薬カルテ確認</div>
 
           <label for="carte-patient-select">表示する患者を切り替え</label>
           <select id="carte-patient-select"></select>
+
+          <!-- 患者さんへ伝えるIDボックス -->
+          <div class="issued-id-banner">
+            <div class="issued-id-label">📲 患者側アプリに入力するID</div>
+            <div class="issued-id-number" id="carte-issued-id">1001</div>
+            <div class="issued-id-note">患者さんのアプリ初回画面でこの4桁のIDを入力してください</div>
+          </div>
 
           <div class="carte-card">
             <div class="carte-patient-title">
@@ -142,7 +151,7 @@
             </div>
 
             <div class="carte-section">
-              <h4>📝 診察メモ（仮入力）</h4>
+              <h4>📝 診察メモ</h4>
               <textarea id="carte-memo" rows="2" placeholder="診察時の所見や申し送り事項を入力..."></textarea>
               <button type="button" id="save-memo-btn" class="action-btn btn-blue" style="margin-top: 6px; padding: 6px;">メモを保存</button>
             </div>
@@ -154,6 +163,6 @@
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script src="pharmacist.js"></script>
 </body>
 </html>
