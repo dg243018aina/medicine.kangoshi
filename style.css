@@ -19,7 +19,7 @@ body {
   width: 100%;
   max-width: 430px;
   height: auto;
-  max-height: 94vh;
+  max-height: 92vh;
   background-color: #ffffff;
   border-radius: 32px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -61,10 +61,9 @@ body {
   background-color: #fcfcfc;
 }
 
-/* 画面切り替え */
 .screen {
   display: none;
-  padding: 12px 16px;
+  padding: 14px 16px;
 }
 
 .screen.active {
@@ -74,7 +73,7 @@ body {
 
 .pharmacist-container h3,
 .carte-container h3 {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: #333;
   margin-bottom: 6px;
@@ -82,17 +81,17 @@ body {
 
 .pharmacist-container h4,
 .carte-container h4 {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #555;
   margin-bottom: 4px;
 }
 
 label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #444;
-  margin-top: 5px;
+  margin-top: 6px;
   margin-bottom: 2px;
   display: block;
 }
@@ -102,7 +101,7 @@ input[type="time"],
 select,
 textarea {
   width: 100%;
-  padding: 6px 8px;
+  padding: 7px 8px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -125,18 +124,17 @@ textarea {
   background: #ddd;
 }
 
-/* ボタン関連 */
 .action-btn {
   width: 100%;
-  padding: 9px;
+  padding: 10px;
   background: #2ecc71;
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 900;
   cursor: pointer;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .action-btn:active {
@@ -145,32 +143,34 @@ textarea {
 
 .btn-orange {
   background-color: #e67e22;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .btn-blue {
   background-color: #2980b9;
-  padding: 7px;
-  font-size: 0.82rem;
+  padding: 8px;
+  font-size: 0.85rem;
   margin-top: 0;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .btn-green {
   background-color: #27ae60;
-  padding: 8px;
-  font-size: 0.85rem;
+  padding: 9px;
+  font-size: 0.88rem;
 }
 
-/* 2画面目用 */
 .target-patient-box {
   background: #fff3e0;
   border: 1.5px solid #ffe0b2;
   border-radius: 8px;
-  padding: 5px 10px;
-  margin-bottom: 6px;
-  font-size: 0.82rem;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
   color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .target-patient-box span {
@@ -178,9 +178,29 @@ textarea {
   color: #e67e22;
 }
 
+.target-id-line {
+  background: #fff;
+  border: 1px solid #f39c12;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #d35400;
+}
+
+.instruction-box {
+  background: #f8f9fa;
+  border-left: 3px solid #27ae60;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #555;
+  line-height: 1.35;
+}
+
 #qr-reader-container {
   display: none;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 #qr-reader {
@@ -200,28 +220,23 @@ textarea {
   cursor: pointer;
 }
 
-/* 細分化したチェックボックスの整列グリッド */
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 5px 8px;
-  padding: 7px 8px;
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
   background: #fff;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   margin-bottom: 6px;
 }
 
-.checkbox-grid label {
+.checkbox-group label {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  gap: 4px;
+  font-size: 0.8rem;
   margin: 0;
-  padding: 3px 4px;
-  background: #f8f9fa;
-  border-radius: 5px;
   cursor: pointer;
 }
 
@@ -231,7 +246,7 @@ textarea {
 
 #medicine-list {
   list-style: none;
-  max-height: 75px;
+  max-height: 90px;
   overflow-y: auto;
 }
 
@@ -241,23 +256,37 @@ textarea {
   border-radius: 8px;
   padding: 5px 8px;
   margin-bottom: 4px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.back-step-btn {
-  margin-top: 6px;
-  width: 100%;
-  padding: 7px;
-  background: #7f8c8d;
-  color: #fff;
+.del-med-btn {
+  background: #ffe3e3;
+  color: #e03131;
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
 }
 
-/* 3画面目: 仮診察・カルテ画面 */
+.back-step-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  background: #7f8c8d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 診察カルテ & 患者ID案内バナー */
 .carte-header-badge {
   background: #2c3e50;
   color: #fff;
@@ -269,22 +298,51 @@ textarea {
   margin-bottom: 8px;
 }
 
+.issued-id-banner {
+  background: linear-gradient(135deg, #ebf5fb 0%, #d6eaf8 100%);
+  border: 2px solid #2980b9;
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.issued-id-label {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #1f618d;
+}
+
+.issued-id-number {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #154360;
+  letter-spacing: 0.12em;
+  margin: 2px 0;
+  user-select: text;
+}
+
+.issued-id-note {
+  font-size: 0.72rem;
+  color: #2c3e50;
+}
+
 .carte-card {
   background: #fff;
   border: 2px solid #dfe6e9;
   border-radius: 12px;
-  padding: 10px 12px;
-  margin-top: 6px;
-  margin-bottom: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
 .carte-patient-title {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #2d3436;
   border-bottom: 2px solid #e67e22;
-  padding-bottom: 5px;
-  margin-bottom: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -297,7 +355,7 @@ textarea {
 }
 
 .carte-section {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .carte-schedule-grid {
@@ -305,9 +363,9 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 4px 8px;
   background: #f8f9fa;
-  padding: 7px;
+  padding: 8px;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .carte-med-list {
@@ -317,8 +375,8 @@ textarea {
 .carte-med-list li {
   background: #eef7f2;
   border-left: 3px solid #27ae60;
-  padding: 5px 8px;
+  padding: 6px 8px;
   margin-bottom: 4px;
   border-radius: 4px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
