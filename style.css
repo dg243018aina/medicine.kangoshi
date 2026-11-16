@@ -19,7 +19,7 @@ body {
   width: 100%;
   max-width: 430px;
   height: auto;
-  max-height: 92vh;
+  max-height: 94vh;
   background-color: #ffffff;
   border-radius: 32px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -64,7 +64,7 @@ body {
 /* 画面切り替え */
 .screen {
   display: none;
-  padding: 14px 16px;
+  padding: 12px 16px;
 }
 
 .screen.active {
@@ -74,7 +74,7 @@ body {
 
 .pharmacist-container h3,
 .carte-container h3 {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 900;
   color: #333;
   margin-bottom: 6px;
@@ -82,17 +82,17 @@ body {
 
 .pharmacist-container h4,
 .carte-container h4 {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #555;
   margin-bottom: 4px;
 }
 
 label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #444;
-  margin-top: 6px;
+  margin-top: 5px;
   margin-bottom: 2px;
   display: block;
 }
@@ -102,7 +102,7 @@ input[type="time"],
 select,
 textarea {
   width: 100%;
-  padding: 7px 8px;
+  padding: 6px 8px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -128,15 +128,15 @@ textarea {
 /* ボタン関連 */
 .action-btn {
   width: 100%;
-  padding: 10px;
+  padding: 9px;
   background: #2ecc71;
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 900;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .action-btn:active {
@@ -145,21 +145,21 @@ textarea {
 
 .btn-orange {
   background-color: #e67e22;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .btn-blue {
   background-color: #2980b9;
-  padding: 8px;
-  font-size: 0.85rem;
+  padding: 7px;
+  font-size: 0.82rem;
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .btn-green {
   background-color: #27ae60;
-  padding: 9px;
-  font-size: 0.88rem;
+  padding: 8px;
+  font-size: 0.85rem;
 }
 
 /* 2画面目用 */
@@ -167,9 +167,9 @@ textarea {
   background: #fff3e0;
   border: 1.5px solid #ffe0b2;
   border-radius: 8px;
-  padding: 6px 10px;
-  margin-bottom: 8px;
-  font-size: 0.85rem;
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
   color: #333;
 }
 
@@ -178,20 +178,9 @@ textarea {
   color: #e67e22;
 }
 
-.instruction-box {
-  background: #f8f9fa;
-  border-left: 3px solid #27ae60;
-  padding: 6px 8px;
-  margin-bottom: 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  color: #555;
-  line-height: 1.35;
-}
-
 #qr-reader-container {
   display: none;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 #qr-reader {
@@ -211,23 +200,28 @@ textarea {
   cursor: pointer;
 }
 
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 8px;
+/* 細分化したチェックボックスの整列グリッド */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px 8px;
+  padding: 7px 8px;
   background: #fff;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   margin-bottom: 6px;
 }
 
-.checkbox-group label {
+.checkbox-grid label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
   margin: 0;
+  padding: 3px 4px;
+  background: #f8f9fa;
+  border-radius: 5px;
   cursor: pointer;
 }
 
@@ -237,7 +231,7 @@ textarea {
 
 #medicine-list {
   list-style: none;
-  max-height: 80px;
+  max-height: 75px;
   overflow-y: auto;
 }
 
@@ -247,18 +241,18 @@ textarea {
   border-radius: 8px;
   padding: 5px 8px;
   margin-bottom: 4px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .back-step-btn {
-  margin-top: 8px;
+  margin-top: 6px;
   width: 100%;
-  padding: 8px;
+  padding: 7px;
   background: #7f8c8d;
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -279,18 +273,18 @@ textarea {
   background: #fff;
   border: 2px solid #dfe6e9;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   margin-top: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .carte-patient-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 900;
   color: #2d3436;
   border-bottom: 2px solid #e67e22;
-  padding-bottom: 6px;
-  margin-bottom: 10px;
+  padding-bottom: 5px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -303,7 +297,7 @@ textarea {
 }
 
 .carte-section {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .carte-schedule-grid {
@@ -311,9 +305,9 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 4px 8px;
   background: #f8f9fa;
-  padding: 8px;
+  padding: 7px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .carte-med-list {
@@ -323,8 +317,8 @@ textarea {
 .carte-med-list li {
   background: #eef7f2;
   border-left: 3px solid #27ae60;
-  padding: 6px 8px;
+  padding: 5px 8px;
   margin-bottom: 4px;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
