@@ -12,13 +12,14 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 15px;
 }
 
 .phone-frame {
   width: 100%;
   max-width: 430px;
-  height: 94vh;
-  max-height: 840px;
+  height: auto;
+  max-height: 92vh;
   background-color: #ffffff;
   border-radius: 32px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -30,16 +31,11 @@ body {
 }
 
 .app-header {
-  background-color: #ffffff;
-  padding: 10px 16px;
+  background-color: #fffaf0;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.admin-header {
-  background-color: #fffaf0;
   border-bottom: 1px solid #ffe0b2;
 }
 
@@ -50,24 +46,21 @@ body {
 }
 
 .app-content {
-  flex: 1;
   overflow-y: auto;
   background-color: #fcfcfc;
 }
 
-/* 画面切り替え（スクロール不要にするため余白を縮小） */
+/* 画面切り替え */
 .screen {
-  display: none !important;
-  padding: 12px 16px;
-  min-height: 100%;
+  display: none;
+  padding: 16px;
 }
 
 .screen.active {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
 }
 
-/* 見出しサイズ（コンパクト化） */
 .pharmacist-container h3 {
   font-size: 0.95rem;
   font-weight: 900;
@@ -82,12 +75,11 @@ body {
   margin-bottom: 4px;
 }
 
-/* フォーム内のラベル・入力枠（コンパクト化） */
 .pharmacist-container label {
   font-size: 0.8rem;
   font-weight: 700;
   color: #444;
-  margin-top: 5px;
+  margin-top: 6px;
   margin-bottom: 2px;
   display: block;
 }
@@ -96,7 +88,7 @@ body {
 .pharmacist-container input[type="time"],
 .pharmacist-container select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 8px;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -106,25 +98,23 @@ body {
   user-select: text;
 }
 
-/* 生活時間の2列グリッド配置（縦幅節約） */
 .time-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 10px;
 }
 
-/* 区切り線 */
 .divider {
-  margin: 10px 0;
+  margin: 12px 0;
   border: 0;
   height: 1px;
   background: #ddd;
 }
 
-/* アクションボタン（コンパクト化） */
+/* ボタン関連 */
 .action-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #2ecc71;
   color: #fff;
   border: none;
@@ -135,11 +125,30 @@ body {
   margin-top: 8px;
 }
 
-.btn-orange { background-color: #e67e22; }
-.btn-blue   { background-color: #2980b9; margin-top: 0; margin-bottom: 8px; padding: 8px; font-size: 0.85rem; }
-.btn-green  { background-color: #27ae60; padding: 9px; font-size: 0.9rem; }
+.action-btn:active {
+  transform: scale(0.98);
+}
 
-/* 2枚目：対象患者表示 */
+.btn-orange {
+  background-color: #e67e22;
+  margin-top: 14px;
+}
+
+.btn-blue {
+  background-color: #2980b9;
+  padding: 8px;
+  font-size: 0.85rem;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.btn-green {
+  background-color: #27ae60;
+  padding: 9px;
+  font-size: 0.9rem;
+}
+
+/* 2画面目用要素 */
 .target-patient-box {
   background: #fff3e0;
   border: 1.5px solid #ffe0b2;
@@ -155,27 +164,24 @@ body {
   color: #e67e22;
 }
 
-/* 2枚目：手順案内ボックス */
 .instruction-box {
   background: #f8f9fa;
   border-left: 3px solid #27ae60;
   padding: 6px 8px;
   margin-bottom: 8px;
   border-radius: 4px;
-}
-
-.instruction-title {
-  font-weight: 700;
-  font-size: 0.8rem;
-  margin-bottom: 2px;
-  color: #333;
-}
-
-.instruction-box ol {
-  padding-left: 16px;
   font-size: 0.75rem;
   color: #555;
   line-height: 1.35;
+}
+
+#qr-reader-container {
+  display: none;
+  margin-bottom: 8px;
+}
+
+#qr-reader {
+  width: 100%;
 }
 
 .cancel-scan-btn {
@@ -187,11 +193,10 @@ body {
   border: none;
   border-radius: 6px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
 }
 
-/* チェックボックスグループ */
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
@@ -212,7 +217,6 @@ body {
   cursor: pointer;
 }
 
-/* 登録済みお薬リスト */
 .registered-medicines-list {
   margin-top: 10px;
 }
@@ -232,18 +236,15 @@ body {
   font-size: 0.8rem;
 }
 
-.med-name {
-  font-size: 0.9rem;
-  font-weight: 900;
-  color: #333;
-  display: block;
-}
-
-.med-info {
-  font-size: 0.78rem;
-  color: #666;
-}
-
-/* 戻るボタン */
 .back-step-btn {
-  margin-top: 1
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  background: #7f8c8d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
