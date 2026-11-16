@@ -13,7 +13,7 @@ const defaultData = {
         { label: 'お風呂', time: '17:00' }
       ],
       meds: [
-        { name: 'ロキソニン', dosage: '1錠', timing: ['朝', '昼', '夕'] }
+        { name: 'ロキソニン', dosage: '1錠', timing: ['朝食後', '昼食後', '夕食後'] }
       ]
     }
   ]
@@ -38,8 +38,6 @@ function saveData(data) {
 
 let appData = getData();
 let html5QrCode = null;
-
-// 画面1から入力された作業中の患者データ（仮保持用）
 let draftPatient = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const editScheduleForm = document.getElementById('edit-schedule-form');
   const medicineList = document.getElementById('medicine-list');
 
-  // 画面切り替え関数
   function showScreen(targetScreen) {
     stopScanner();
     [step1, step2, stepCarte].forEach(s => s.classList.remove('active'));
     targetScreen.classList.add('active');
   }
 
-  // 初期表示
   renderPatientSelect();
   loadCurrentSchedule();
 
@@ -93,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     if (newName) {
-      // 新規入力された人を仮患者としてセット（薬登録完了で正式保存）
       draftPatient = {
         id: Date.now(),
         name: newName,
@@ -105,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       targetPatientName.textContent = draftPatient.name + "（新規）";
     } else {
-      // 既存の選択された患者を編集対象としてセット
       const existing = appData.patients.find(p => p.id === appData.currentPatientId) || appData.patients[0];
       draftPatient = {
         ...existing,
@@ -159,11 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
     appData.currentPatientId = draftPatient.id;
     saveData(appData);
 
-    // プルダウン更新＆新規入力欄クリア
     patientInput.value = '';
     renderPatientSelect();
 
-    // 診察画面（カルテ）を描画して遷移
     renderCarteScreen(draftPatient.id);
     showScreen(stepCarte);
   });
@@ -232,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     draftPatient.meds.forEach((med) => {
       const li = document.createElement('li');
-      const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join(', ') : '指定なし';
+      const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join('・') : '指定なし';
       li.innerHTML = `<strong>${med.name}</strong> (${med.dosage}) [${timingsStr}]`;
       medicineList.appendChild(li);
     });
@@ -253,13 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('carte-date').textContent = `更新日: ${patient.updatedAt || '本日'}`;
     document.getElementById('carte-memo').value = patient.memo || '';
 
-    // 生活時間
     const schedContainer = document.getElementById('carte-schedule-list');
     schedContainer.innerHTML = patient.schedule.map(s => `
       <div><strong>${s.label}:</strong> ${s.time}</div>
     `).join('');
 
-    // お薬一覧
     const medContainer = document.getElementById('carte-med-list');
     if (patient.meds.length === 0) {
       medContainer.innerHTML = '<li style="background:#f9f9f9; border-color:#ccc;">登録されたお薬はありません</li>';
@@ -364,10 +354,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 細分化された「食前・食後」の自動判定
   function extractTimings(str, targetArray) {
-    if (str.includes('朝')) targetArray.push('朝');
-    if (str.includes('昼')) targetArray.push('昼');
-    if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
+    const isBeforeMeal = str.includes('食前');
+    // 「食前」と明記されていなければ基本的に「食後」として判定
+    const suffix = isBeforeMeal ? '食前' : '食後';
+
+    if (str.includes('朝')) targetArray.push('朝' + suffix);
+    if (str.includes('昼')) targetArray.push('昼' + suffix);
+    if (str.includes('夕') || str.includes('夜')) targetArray.push('夕' + suffix);
     if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
     if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
   }
