@@ -1,395 +1,1114 @@
-const SHARED_STORAGE_KEY = 'brain_med_app_data';
-
-const defaultData = {
-  currentPatientId: '1001',
-  patients: [
-    {
-      id: '1001',
-      name: '眞野 宏太',
-      updatedAt: '2026/11/16',
-      memo: '血圧安定。食後の飲み忘れに注意。',
-      schedule: [
-        { label: '朝ごはん', time: '07:00' },
-        { label: '昼ごはん', time: '12:00' },
-        { label: '晩ごはん', time: '19:00' },
-        { label: 'お風呂', time: '17:00' }
-      ],
-      meds: [
-        { name: 'ロキソニン', dosage: '1錠', timing: ['朝', '昼', '夕'] }
-      ]
-    }
-  ]
-};
-
-function getData() {
-  try {
-    const saved = localStorage.getItem(SHARED_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && Array.isArray(parsed.patients) && parsed.patients.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.warn('読み込みエラー:', e);
-  }
-  saveData(defaultData);
-  return JSON.parse(JSON.stringify(defaultData));
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  user-select: none;
 }
 
-function saveData(data) {
-  try {
-    localStorage.setItem(SHARED_STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.warn('保存エラー:', e);
-  }
+body {
+  background-color: #2c3e50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 15px;
 }
 
-// 入力しやすい4桁の患者IDを自動採番（1001, 1002, 1003...）
-function generateNextPatientId(patients) {
-  let maxNum = 1000;
-  patients.forEach(p => {
-    const num = parseInt(String(p.id), 10);
-    if (!isNaN(num) && num >= 1000 && num < 10000 && num > maxNum) {
-      maxNum = num;
-    }
-  });
-  return String(maxNum + 1);
+.phone-frame {
+  width: 100%;
+  max-width: 430px;
+  height: 780px;
+  max-height: 92vh;
+  background-color: #fffdf9;
+  border-radius: 36px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 6px solid #1a252f;
+  position: relative;
 }
 
-let appData = getData();
-let html5QrCode = null;
-let draftPatient = null;
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-  const step1 = document.getElementById('screen-step1');
-  const step2 = document.getElementById('screen-step2');
-  const stepCarte = document.getElementById('screen-carte');
+.screen {
+  display: none;
+  flex: 1;
+  padding: 18px 16px;
+  flex-direction: column;
+}
 
-  const patientInput = document.getElementById('patient-name-input');
-  const patientSelect = document.getElementById('patient-select');
-  const targetPatientName = document.getElementById('target-patient-name');
-  const targetPatientId = document.getElementById('target-patient-id');
-  const editScheduleForm = document.getElementById('edit-schedule-form');
-  const medicineList = document.getElementById('medicine-list');
+.screen.active {
+  display: flex;
+}
 
-  function showScreen(targetScreen) {
-    stopScanner();
-    [step1, step2, stepCarte].forEach(s => s.classList.remove('active'));
-    targetScreen.classList.add('active');
-  }
+.hidden {
+  display: none !important;
+}
 
-  renderPatientSelect();
-  loadCurrentSchedule();
+/* =========================================
+   初回起動時：患者ID入力画面
+   ========================================= */
+.id-login-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 12px;
+  background: radial-gradient(circle at top, #fff5e6 0%, #fffdf9 70%);
+}
 
-  // ヘッダーの「診察カルテ」ボタン
-  document.getElementById('header-carte-btn').addEventListener('click', () => {
-    renderCarteScreen(appData.currentPatientId);
-    showScreen(stepCarte);
-  });
+.id-login-icon {
+  font-size: 3.4rem;
+  margin-bottom: 10px;
+}
 
-  // 既存患者を選択したら新規入力欄をクリア
-  patientSelect.addEventListener('change', (e) => {
-    const selectedId = e.target.value;
-    if (selectedId) {
-      appData.currentPatientId = selectedId;
-      patientInput.value = '';
-      loadCurrentSchedule();
-    }
-  });
+.id-login-title {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #e67e22;
+  margin-bottom: 12px;
+}
 
-  // 1画面目「次へ（お薬登録）」
-  editScheduleForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+.id-login-desc {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
 
-    const newName = patientInput.value.trim();
-    const scheduleData = [
-      { label: '朝ごはん', time: document.getElementById('sched-bf').value || '07:00' },
-      { label: '昼ごはん', time: document.getElementById('sched-lunch').value || '12:00' },
-      { label: '晩ごはん', time: document.getElementById('sched-dinner').value || '19:00' },
-      { label: 'お風呂', time: document.getElementById('sched-bath').value || '17:00' }
-    ];
+.id-login-form {
+  width: 100%;
+  max-width: 320px;
+}
 
-    if (newName) {
-      const issuedId = generateNextPatientId(appData.patients);
-      draftPatient = {
-        id: issuedId,
-        name: newName,
-        updatedAt: new Date().toLocaleDateString('ja-JP'),
-        memo: '',
-        schedule: scheduleData,
-        meds: [],
-        isNew: true
-      };
-      targetPatientName.textContent = `${draftPatient.name}（新規）`;
-      targetPatientId.textContent = issuedId;
-    } else {
-      const existing = appData.patients.find(p => String(p.id) === String(appData.currentPatientId)) || appData.patients[0];
-      draftPatient = {
-        ...existing,
-        schedule: scheduleData,
-        meds: existing ? [...existing.meds] : [],
-        isNew: false
-      };
-      targetPatientName.textContent = draftPatient ? draftPatient.name : '未指定';
-      targetPatientId.textContent = draftPatient ? draftPatient.id : '----';
-    }
+#login-patient-id-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.15em;
+  border: 3px solid #f39c12;
+  border-radius: 16px;
+  background: #fff;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  user-select: text;
+}
 
-    renderDraftMedicineList();
-    showScreen(step2);
-  });
+#login-patient-id-input:focus {
+  outline: none;
+  border-color: #e67e22;
+  box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.2);
+}
 
-  // 2画面目：薬を追加リストに入れる
-  document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!draftPatient) return;
+.id-login-error {
+  color: #e03131;
+  background: #ffe3e3;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
 
-    const name = cleanProductName(document.getElementById('med-name').value);
-    const dosage = document.getElementById('med-dosage').value;
-    const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+.id-login-note {
+  margin-top: 18px;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  line-height: 1.45;
+}
 
-    draftPatient.meds.push({
-      name: name,
-      dosage: dosage || '指定なし',
-      timing: checkedTimings
-    });
+/* =========================================
+   オープニング画面
+   ========================================= */
+.opening-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: radial-gradient(circle at top, #fff3e0 0%, #fffdf9 75%);
+  padding: 10px;
+}
 
-    renderDraftMedicineList();
-    e.target.reset();
-  });
+.opening-title h1 {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #e67e22;
+  line-height: 1.2;
+  text-shadow: 2px 2px 0 #ffe0b2;
+  margin-bottom: 10px;
+}
 
-  // 2画面目：「患者データを確定してIDを発行する」
-  document.getElementById('complete-patient-btn').addEventListener('click', () => {
-    if (!draftPatient) return;
+.opening-title h1 span {
+  color: #27ae60;
+  font-size: 1.8rem;
+}
 
-    draftPatient.updatedAt = new Date().toLocaleDateString('ja-JP');
+.opening-user-badge {
+  background: #fff;
+  border: 2px solid #f39c12;
+  color: #d35400;
+  font-weight: 900;
+  font-size: 1.05rem;
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.15);
+}
 
-    if (draftPatient.isNew) {
-      delete draftPatient.isNew;
-      appData.patients.push(draftPatient);
-    } else {
-      const idx = appData.patients.findIndex(p => String(p.id) === String(draftPatient.id));
-      if (idx !== -1) {
-        delete draftPatient.isNew;
-        appData.patients[idx] = draftPatient;
-      }
-    }
+.opening-hero-pet {
+  width: 170px;
+  height: 170px;
+  margin: 6px auto 12px;
+}
 
-    appData.currentPatientId = draftPatient.id;
-    saveData(appData);
+.hamster-svg-art {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
 
-    patientInput.value = '';
-    renderPatientSelect();
+.opening-sub {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 22px;
+}
 
-    renderCarteScreen(draftPatient.id);
-    showScreen(stepCarte);
-  });
+.start-app-btn {
+  width: 100%;
+  max-width: 290px;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, #ff9f43 0%, #ee5253 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #c23616, 0 10px 20px rgba(238, 82, 83, 0.3);
+}
 
-  // 2画面目：戻るボタン
-  document.getElementById('back-to-step1-btn').addEventListener('click', () => {
-    showScreen(step1);
-  });
+.start-app-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #c23616;
+}
 
-  // 3画面目（診察カルテ）：患者切り替え
-  document.getElementById('carte-patient-select').addEventListener('change', (e) => {
-    const id = e.target.value;
-    if (id) {
-      appData.currentPatientId = id;
-      saveData(appData);
-      renderCarteScreen(id);
-    }
-  });
+/* =========================================
+   ホーム画面
+   ========================================= */
+.home-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
 
-  // 3画面目（診察カルテ）：メモ保存
-  document.getElementById('save-memo-btn').addEventListener('click', () => {
-    const patient = appData.patients.find(p => String(p.id) === String(appData.currentPatientId));
-    if (patient) {
-      patient.memo = document.getElementById('carte-memo').value;
-      saveData(appData);
-      alert('診察メモを保存しました。');
-    }
-  });
+.calendar-hero-card {
+  flex: 1;
+  background: linear-gradient(160deg, #fff9eb 0%, #ffefd5 100%);
+  border: 3px solid #ffd8a8;
+  border-radius: 26px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(243, 156, 18, 0.15);
+}
 
-  // 3画面目：「新しい患者・お薬を登録する」
-  document.getElementById('new-register-btn').addEventListener('click', () => {
-    patientInput.value = '';
-    patientSelect.value = '';
-    showScreen(step1);
-  });
+.calendar-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 
-  function renderPatientSelect() {
-    patientSelect.innerHTML = '<option value="">-- 患者を選択してください --</option>' +
-      appData.patients.map(p => `
-        <option value="${p.id}" ${String(p.id) === String(appData.currentPatientId) ? 'selected' : ''}>
-          [ID: ${p.id}] ${p.name}
-        </option>
-      `).join('');
-  }
+.big-calendar-illust {
+  width: 105px;
+  background: #fff;
+  border-radius: 18px;
+  border: 3px solid #5c3a21;
+  overflow: hidden;
+  box-shadow: 0 4px 0 #5c3a21;
+  flex-shrink: 0;
+}
 
-  function loadCurrentSchedule() {
-    const patient = appData.patients.find(p => String(p.id) === String(appData.currentPatientId));
-    if (!patient) return;
+.cal-illust-top {
+  background: #ff6b6b;
+  color: #fff;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
 
-    const bf = patient.schedule.find(s => s.label === '朝ごはん');
-    const lunch = patient.schedule.find(s => s.label === '昼ごはん');
-    const dinner = patient.schedule.find(s => s.label === '晩ごはん');
-    const bath = patient.schedule.find(s => s.label === 'お風呂');
+.cal-ring {
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+}
 
-    if (bf) document.getElementById('sched-bf').value = bf.time;
-    if (lunch) document.getElementById('sched-lunch').value = lunch.time;
-    if (dinner) document.getElementById('sched-dinner').value = dinner.time;
-    if (bath) document.getElementById('sched-bath').value = bath.time;
-  }
+.cal-illust-body {
+  padding: 8px 4px;
+  text-align: center;
+}
 
-  function renderDraftMedicineList() {
-    medicineList.innerHTML = '';
-    if (!draftPatient || !draftPatient.meds) return;
+.cal-big-day {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #2d3436;
+  line-height: 1;
+}
 
-    draftPatient.meds.forEach((med, idx) => {
-      const li = document.createElement('li');
-      const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join(', ') : '指定なし';
-      li.innerHTML = `
-        <span><strong>${med.name}</strong> (${med.dosage}) [${timingsStr}]</span>
-        <button type="button" class="del-med-btn" data-idx="${idx}">削除</button>
-      `;
-      li.querySelector('.del-med-btn').addEventListener('click', () => {
-        draftPatient.meds.splice(idx, 1);
-        renderDraftMedicineList();
-      });
-      medicineList.appendChild(li);
-    });
-  }
+.cal-mini-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 5px;
+}
 
-  function renderCarteScreen(patientId) {
-    const carteSelect = document.getElementById('carte-patient-select');
-    carteSelect.innerHTML = appData.patients.map(p => `
-      <option value="${p.id}" ${String(p.id) === String(patientId) ? 'selected' : ''}>
-        [ID: ${p.id}] ${p.name} 様
-      </option>
-    `).join('');
+.cal-mini-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
 
-    const patient = appData.patients.find(p => String(p.id) === String(patientId)) || appData.patients[0];
-    if (!patient) return;
+.dot-o { background: #ff922b; }
+.dot-y { background: #fcc419; }
+.dot-g { background: #51cf66; }
 
-    document.getElementById('carte-issued-id').textContent = patient.id;
-    document.getElementById('carte-name').textContent = patient.name;
-    document.getElementById('carte-date').textContent = `更新日: ${patient.updatedAt || '本日'}`;
-    document.getElementById('carte-memo').value = patient.memo || '';
+.calendar-tap-hint h3 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #5c3a21;
+  margin: 4px 0 2px;
+}
 
-    const schedContainer = document.getElementById('carte-schedule-list');
-    schedContainer.innerHTML = patient.schedule.map(s => `
-      <div><strong>${s.label}:</strong> ${s.time}</div>
-    `).join('');
+.calendar-tap-hint p {
+  font-size: 0.88rem;
+  color: #7f6048;
+  font-weight: 700;
+}
 
-    const medContainer = document.getElementById('carte-med-list');
-    if (patient.meds.length === 0) {
-      medContainer.innerHTML = '<li style="background:#f9f9f9; border-color:#ccc;">登録されたお薬はありません</li>';
-    } else {
-      medContainer.innerHTML = patient.meds.map(m => `
-        <li>
-          <strong>${m.name}</strong>（${m.dosage}）<br>
-          <span style="color:#27ae60; font-weight:bold;">服用: ${m.timing.join('・') || '指定なし'}</span>
-        </li>
-      `).join('');
-    }
-  }
+.hint-badge {
+  display: inline-block;
+  background: #ff922b;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
 
-  // --- QR読み取り制御 ---
-  const startBtn = document.getElementById('start-scan-btn');
-  const stopBtn = document.getElementById('stop-scan-btn');
-  const readerContainer = document.getElementById('qr-reader-container');
+.home-pet-corner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
 
-  startBtn.addEventListener('click', () => {
-    if (typeof Html5Qrcode === 'undefined') {
-      alert('QR読み取りライブラリの読み込み中です。');
-      return;
-    }
-    readerContainer.style.display = 'block';
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode('qr-reader');
-    }
+.home-speech-bubble {
+  flex: 1;
+  background: #fff;
+  border: 2.5px solid #5c3a21;
+  border-radius: 18px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #3d2616;
+  line-height: 1.45;
+  position: relative;
+}
 
-    html5QrCode.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      (decodedText) => {
-        parseMedicineQR(decodedText);
-        stopScanner();
-      },
-      () => {}
-    ).catch(err => {
-      alert('カメラの起動に失敗しました: ' + err);
-      readerContainer.style.display = 'none';
-    });
-  });
+.home-pet-avatar {
+  width: 112px;
+  height: 112px;
+  flex-shrink: 0;
+  transform-origin: bottom center;
+}
 
-  stopBtn.addEventListener('click', stopScanner);
+.home-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
 
-  function stopScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().then(() => {
-        readerContainer.style.display = 'none';
-      }).catch(() => {
-        readerContainer.style.display = 'none';
-      });
-    } else {
-      readerContainer.style.display = 'none';
-    }
-  }
+.nav-btn {
+  border: none;
+  border-radius: 22px;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
 
-  function cleanProductName(text) {
-    return text.replace(/(https?:\/\/[^\s]+|www\.[^\s]+)/g, '').trim();
-  }
+.nav-btn:active {
+  transform: translateY(3px);
+}
 
-  function parseMedicineQR(text) {
-    let medName = '';
-    let dosage = '';
-    let timings = [];
+.btn-pet {
+  background: linear-gradient(180deg, #ff922b 0%, #f76707 100%);
+  box-shadow: 0 5px 0 #d9480f;
+}
 
-    const lines = text.split('\n');
-    let isJahis = false;
+.btn-med {
+  background: linear-gradient(180deg, #51cf66 0%, #2b8a3e 100%);
+  box-shadow: 0 5px 0 #1e602b;
+}
 
-    lines.forEach(line => {
-      const cols = line.split(',');
-      if (cols[0] === '201' || cols[0] === '281') {
-        isJahis = true;
-        medName = cols[4] || cols[3] || medName;
-        if (cols[5]) dosage = cols[5] + (cols[6] || '');
-      }
-      if (cols[0] === '301' || cols[0] === '311') {
-        const usageText = cols[4] || '';
-        extractTimings(usageText, timings);
-      }
-    });
+.btn-calc {
+  background: linear-gradient(180deg, #4dabf7 0%, #1c7ed6 100%);
+  box-shadow: 0 5px 0 #1864ab;
+}
 
-    if (!isJahis) {
-      try {
-        const data = JSON.parse(text);
-        medName = data.name || '';
-        dosage = data.dosage || '';
-        if (Array.isArray(data.timing)) timings = data.timing;
-      } catch (e) {
-        medName = text.split(/\s+/)[0] || text;
-        extractTimings(text, timings);
-      }
-    }
+.nav-icon {
+  font-size: 2.1rem;
+}
 
-    medName = cleanProductName(medName);
+.nav-text {
+  font-size: 1.05rem;
+}
 
-    if (medName) document.getElementById('med-name').value = medName;
-    if (dosage) document.getElementById('med-dosage').value = dosage;
+/* =========================================
+   共通ヘッダー
+   ========================================= */
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
-    const checkboxes = document.querySelectorAll('input[name="med-timing"]');
-    checkboxes.forEach(cb => {
-      cb.checked = timings.includes(cb.value);
-    });
-  }
+.screen-header h2 {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #3d2616;
+}
 
-  function extractTimings(str, targetArray) {
-    if (str.includes('朝')) targetArray.push('朝');
-    if (str.includes('昼')) targetArray.push('昼');
-    if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
-    if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
-    if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
-  }
-});
+.back-btn {
+  background: #f1f3f5;
+  border: 2px solid #ced4da;
+  border-radius: 12px;
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #495057;
+  cursor: pointer;
+}
+
+/* =========================================
+   ペット画面
+   ========================================= */
+.pet-display {
+  background: linear-gradient(180deg, #fff9db 0%, #fff3bf 100%);
+  border: 2.5px solid #ffd43b;
+  border-radius: 22px;
+  padding: 12px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.pet-level-badge {
+  display: inline-block;
+  background: #ff922b;
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.exp-bar-area {
+  margin-bottom: 6px;
+}
+
+.exp-bar-container {
+  width: 85%;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #f08c00;
+  border-radius: 999px;
+  margin: 0 auto 4px;
+  overflow: hidden;
+}
+
+.exp-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #fcc419, #ff922b);
+  transition: width 0.3s ease;
+}
+
+.exp-text {
+  font-size: 0.78rem;
+  color: #5c3a21;
+}
+
+.pet-character-container {
+  height: 155px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pet-character-svg {
+  width: 145px;
+  height: 145px;
+  transition: transform 0.3s ease;
+}
+
+.pet-status {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #5c3a21;
+  margin-top: 4px;
+}
+
+.coin-badge {
+  background: #fff;
+  border: 2px solid #fcc419;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.tab-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tab-btn {
+  padding: 10px;
+  border: 2px solid #dee2e6;
+  border-radius: 14px;
+  background: #f8f9fa;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #495057;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #ff922b;
+  border-color: #f76707;
+  color: #fff;
+}
+
+.tab-content {
+  display: none;
+  flex: 1;
+}
+
+.tab-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.food-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.food-card {
+  background: #fff;
+  border: 2px solid #ffe0b2;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.food-card:active {
+  transform: scale(0.97);
+}
+
+.food-img {
+  font-size: 2rem;
+}
+
+.food-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.food-title {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #333;
+}
+
+.food-cost {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e67e22;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 2px solid #ffe0b2;
+  border-radius: 16px;
+  padding: 10px;
+  min-height: 180px;
+}
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  max-height: 170px;
+}
+
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  max-width: 85%;
+}
+
+.pet-bubble {
+  background: #fff3bf;
+  color: #3d2616;
+  align-self: flex-start;
+}
+
+.user-bubble {
+  background: #d0ebff;
+  color: #1864ab;
+  align-self: flex-end;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 2px solid #ced4da;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  user-select: text;
+}
+
+.chat-input-row button {
+  padding: 8px 14px;
+  background: #ff922b;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* =========================================
+   計算画面
+   ========================================= */
+#calc-menu h3 {
+  font-size: 1rem;
+  margin: 10px 0 8px;
+  color: #495057;
+}
+
+.calc-op-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.calc-diff-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.menu-btn {
+  padding: 12px 6px;
+  border: 2px solid #ced4da;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #495057;
+  cursor: pointer;
+}
+
+.menu-btn.active {
+  background: #339af0;
+  border-color: #1c7ed6;
+  color: #fff;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 14px;
+  background: #2f9e44;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.calc-progress-badge {
+  text-align: center;
+  font-weight: 900;
+  color: #1c7ed6;
+  margin-bottom: 8px;
+}
+
+.question-box {
+  background: #e7f5ff;
+  border: 3px solid #74c0fc;
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1864ab;
+  margin-bottom: 8px;
+}
+
+.calc-feedback {
+  text-align: center;
+  font-weight: 900;
+  padding: 6px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.calc-feedback.correct {
+  background: #d3f9d8;
+  color: #2b8a3e;
+}
+
+.calc-feedback.wrong {
+  background: #ffe3e3;
+  color: #c92a2a;
+}
+
+.answer-box {
+  height: 48px;
+  border: 2.5px solid #adb5bd;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.7rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.num-btn {
+  padding: 14px 0;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border: 2px solid #dee2e6;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.clear-btn {
+  background: #ffe3e3;
+  color: #c92a2a;
+  font-size: 1rem;
+}
+
+.submit-btn {
+  background: #2f9e44;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.result-card {
+  background: #fff9db;
+  border: 3px solid #fcc419;
+  border-radius: 22px;
+  padding: 20px;
+  text-align: center;
+}
+
+.result-icon {
+  font-size: 3rem;
+}
+
+.result-score {
+  font-size: 1.3rem;
+  font-weight: 900;
+  margin: 10px 0;
+}
+
+.result-coin-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.result-coins {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #e67e22;
+}
+
+/* =========================================
+   お薬・生活時間画面
+   ========================================= */
+.patient-info-header {
+  background: #ebfbee;
+  border: 2px solid #8ce99a;
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.patient-info-header h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #2b8a3e;
+}
+
+.patient-id-sub {
+  background: #fff;
+  border: 1.5px solid #51cf66;
+  color: #2b8a3e;
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.med-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card {
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 18px;
+  padding: 12px;
+}
+
+.card h4 {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+#schedule-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+#schedule-list li {
+  background: #f8f9fa;
+  padding: 7px 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+}
+
+.med-item {
+  background: #f3faf5;
+  border-left: 4px solid #2f9e44;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.med-name {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #212529;
+}
+
+.med-instruction {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2b8a3e;
+  margin-top: 2px;
+}
+
+.med-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.med-done-btn {
+  padding: 14px;
+  background: linear-gradient(180deg, #40c057 0%, #2b8a3e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.alarm-test-btn {
+  padding: 11px;
+  background: #fff3bf;
+  color: #e67700;
+  border: 2px solid #fcc419;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* =========================================
+   カレンダー画面
+   ========================================= */
+.calendar-view-container {
+  background: #fff;
+  border: 2px solid #ffd8a8;
+  border-radius: 18px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.calendar-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.month-nav-btn {
+  background: #fff4e6;
+  border: 1.5px solid #ffc078;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-weight: 900;
+  color: #d9480f;
+  cursor: pointer;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.calendar-weekdays .sun { color: #e03131; }
+.calendar-weekdays .sat { color: #1971c2; }
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+}
+
+.day-cell.today {
+  background: #fff3bf;
+  border: 2px solid #fcc419;
+}
+
+.day-cell.selected {
+  background: #ff922b;
+  color: #fff;
+}
+
+.event-dot {
+  width: 6px;
+  height: 6px;
+  background: #2f9e44;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+.selected-day-schedule {
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 16px;
+  padding: 10px;
+  flex: 1;
+}
+
+.schedule-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.small-btn {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 7px 10px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+  font-size: 0.88rem;
+}
+
+.delete-event-btn {
+  background: #ffe3e3;
+  color: #c92a2a;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* =========================================
+   モーダル
+   ========================================= */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  z-index: 100;
+}
+
+.alarm-content,
+.modal-content {
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.alarm-btn-group,
+.modal-btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.alarm-btn,
+.btn-cancel,
+.btn-submit {
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.btn-taken,
+.btn-submit {
+  background: #2f9e44;
+  color: #fff;
+}
+
+.btn-not-taken,
+.btn-cancel {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.form-group {
+  text-align: left;
+  margin-top: 10px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 9px;
+  border: 2px solid #ced4da;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  user-select: text;
+}
