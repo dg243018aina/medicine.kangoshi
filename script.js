@@ -1,282 +1,250 @@
-// --- データ管理初期設定 ---
-const defaultData = {
-  coins: 11,
-  love: 100,
-  currentPatientId: 1,
-  patients: [
-    {
-      id: 1,
-      name: '眞野 宏太',
-      age: 86,
-      schedule: [
-        { label: '朝ごはん', time: '07:00' },
-        { label: '昼ごはん', time: '12:00' },
-        { label: '晩ごはん', time: '19:00' },
-        { label: 'お風呂', time: '17:00' }
-      ],
-      meds: [
-        { name: 'ロキソニン', dosage: '1錠', timing: ['朝', '昼', '夕'] },
-        { name: '軟膏(塗り薬)', dosage: '適量', timing: ['朝', '就寝前'] }
-      ]
-    }
-  ]
-};
-
-function getData() {
-  const saved = localStorage.getItem('brain_med_app_data');
-  return saved ? JSON.parse(saved) : defaultData;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  user-select: none;
 }
 
-function saveData(data) {
-  localStorage.setItem('brain_med_app_data', JSON.stringify(data));
+body {
+  background-color: #2c3e50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 15px;
 }
 
-let appData = getData();
-let html5QrCode = null;
+.phone-frame {
+  width: 100%;
+  max-width: 430px;
+  height: auto;
+  max-height: 92vh;
+  background-color: #ffffff;
+  border-radius: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 6px solid #1a252f;
+  position: relative;
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-  // 画面要素の取得
-  const step1 = document.getElementById('screen-step1');
-  const step2 = document.getElementById('screen-step2');
-  const patientInput = document.getElementById('patient-name-input');
-  const patientSelect = document.getElementById('patient-select');
-  const targetPatientName = document.getElementById('target-patient-name');
-  const editScheduleForm = document.getElementById('edit-schedule-form');
-  const backBtn = document.getElementById('back-to-step1-btn');
-  const medicineList = document.getElementById('medicine-list');
+.app-header {
+  background-color: #fffaf0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ffe0b2;
+}
 
-  // 初期描画
-  renderPatientSelect();
-  loadCurrentSchedule();
+.header-title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #e67e22;
+}
 
-  // 1. 患者選択ドロップダウン変更時（既存患者を選んだら新規入力欄をクリア）
-  patientSelect.addEventListener('change', (e) => {
-    const selectedId = parseInt(e.target.value, 10);
-    if (selectedId) {
-      appData.currentPatientId = selectedId;
-      if (patientInput) patientInput.value = '';
-      saveData(appData);
-      loadCurrentSchedule();
-    }
-  });
+.app-content {
+  overflow-y: auto;
+  background-color: #fcfcfc;
+}
 
-  // 2. 生活時間保存 & 新規患者があれば登録して画面2への遷移
-  editScheduleForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+/* 画面切り替え */
+.screen {
+  display: none;
+  padding: 16px;
+}
 
-    const newName = patientInput ? patientInput.value.trim() : '';
-    let patient = null;
+.screen.active {
+  display: flex;
+  flex-direction: column;
+}
 
-    if (newName) {
-      // 新規患者名が入力されている場合は新しく作成して選択状態にする
-      patient = {
-        id: Date.now(),
-        name: newName,
-        age: 80, // 初期値
-        schedule: [],
-        meds: []
-      };
-      appData.patients.push(patient);
-      appData.currentPatientId = patient.id;
-      patientInput.value = '';
-      renderPatientSelect();
-    } else {
-      // 既存の選択された患者を取得
-      patient = appData.patients.find(p => p.id === appData.currentPatientId);
-      if (!patient && appData.patients.length > 0) {
-        patient = appData.patients[0];
-        appData.currentPatientId = patient.id;
-      }
-    }
+.pharmacist-container h3 {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #333;
+  margin-bottom: 6px;
+}
 
-    if (patient) {
-      patient.schedule = [
-        { label: '朝ごはん', time: document.getElementById('sched-bf').value || '07:00' },
-        { label: '昼ごはん', time: document.getElementById('sched-lunch').value || '12:00' },
-        { label: '晩ごはん', time: document.getElementById('sched-dinner').value || '19:00' },
-        { label: 'お風呂', time: document.getElementById('sched-bath').value || '17:00' }
-      ];
-      saveData(appData);
-      targetPatientName.textContent = patient.name;
-    } else {
-      targetPatientName.textContent = '未指定';
-    }
+.pharmacist-container h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 4px;
+}
 
-    renderMedicineList();
+.pharmacist-container label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #444;
+  margin-top: 6px;
+  margin-bottom: 2px;
+  display: block;
+}
 
-    // 画面遷移
-    step1.classList.remove('active');
-    step2.classList.add('active');
-  });
+.pharmacist-container input[type="text"],
+.pharmacist-container input[type="time"],
+.pharmacist-container select {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  background-color: #fff;
+  color: #333;
+  user-select: text;
+}
 
-  // 3. 画面2から画面1へ戻る
-  backBtn.addEventListener('click', () => {
-    stopScanner();
-    step2.classList.remove('active');
-    step1.classList.add('active');
-  });
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+}
 
-  // 4. お薬追加フォーム送信
-  document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = cleanProductName(document.getElementById('med-name').value);
-    const dosage = document.getElementById('med-dosage').value;
-    const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+.divider {
+  margin: 12px 0;
+  border: 0;
+  height: 1px;
+  background: #ddd;
+}
 
-    const patient = appData.patients.find(p => p.id === appData.currentPatientId);
-    if (patient) {
-      patient.meds.push({
-        name: name,
-        dosage: dosage || '指定なし',
-        timing: checkedTimings
-      });
-      saveData(appData);
-      renderMedicineList();
-      alert(`「${name}」を登録しました。`);
-    }
+/* ボタン関連 */
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  background: #2ecc71;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 8px;
+}
 
-    e.target.reset();
-  });
+.action-btn:active {
+  transform: scale(0.98);
+}
 
-  // 5. QR読み取り制御
-  const startBtn = document.getElementById('start-scan-btn');
-  const stopBtn = document.getElementById('stop-scan-btn');
-  const readerContainer = document.getElementById('qr-reader-container');
+.btn-orange {
+  background-color: #e67e22;
+  margin-top: 14px;
+}
 
-  startBtn.addEventListener('click', () => {
-    readerContainer.style.display = 'block';
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode("qr-reader");
-    }
+.btn-blue {
+  background-color: #2980b9;
+  padding: 8px;
+  font-size: 0.85rem;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
 
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      (decodedText) => {
-        parseMedicineQR(decodedText);
-        stopScanner();
-      },
-      () => {}
-    ).catch(err => {
-      alert("カメラの起動に失敗しました: " + err);
-      readerContainer.style.display = 'none';
-    });
-  });
+.btn-green {
+  background-color: #27ae60;
+  padding: 9px;
+  font-size: 0.9rem;
+}
 
-  stopBtn.addEventListener('click', stopScanner);
+/* 2画面目用要素 */
+.target-patient-box {
+  background: #fff3e0;
+  border: 1.5px solid #ffe0b2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #333;
+}
 
-  function stopScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().then(() => {
-        readerContainer.style.display = 'none';
-      }).catch(() => {
-        readerContainer.style.display = 'none';
-      });
-    } else {
-      readerContainer.style.display = 'none';
-    }
-  }
+.target-patient-box span {
+  font-weight: 900;
+  color: #e67e22;
+}
 
-  // --- ヘルパー関数群 ---
+.instruction-box {
+  background: #f8f9fa;
+  border-left: 3px solid #27ae60;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #555;
+  line-height: 1.35;
+}
 
-  // URL除去用関数
-  function cleanProductName(text) {
-    return text.replace(/(https?:\/\/[^\s]+|www\.[^\s]+)/g, '').trim();
-  }
+#qr-reader-container {
+  display: none;
+  margin-bottom: 8px;
+}
 
-  // 患者選択プルダウンの更新
-  function renderPatientSelect() {
-    patientSelect.innerHTML = '<option value="">-- 患者を選択してください --</option>' +
-      appData.patients.map(p => `
-        <option value="${p.id}" ${p.id === appData.currentPatientId ? 'selected' : ''}>
-          ${p.name} (${p.age}歳)
-        </option>
-      `).join('');
-  }
+#qr-reader {
+  width: 100%;
+}
 
-  // 現在選択中の患者の生活時間をフォームにセット
-  function loadCurrentSchedule() {
-    const patient = appData.patients.find(p => p.id === appData.currentPatientId);
-    if (!patient) return;
+.cancel-scan-btn {
+  margin-top: 4px;
+  width: 100%;
+  padding: 6px;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    const bf = patient.schedule.find(s => s.label === '朝ごはん');
-    const lunch = patient.schedule.find(s => s.label === '昼ごはん');
-    const dinner = patient.schedule.find(s => s.label === '晩ごはん');
-    const bath = patient.schedule.find(s => s.label === 'お風呂');
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
 
-    if (bf) document.getElementById('sched-bf').value = bf.time;
-    if (lunch) document.getElementById('sched-lunch').value = lunch.time;
-    if (dinner) document.getElementById('sched-dinner').value = dinner.time;
-    if (bath) document.getElementById('sched-bath').value = bath.time;
-  }
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  margin: 0;
+  cursor: pointer;
+}
 
-  // 選択中患者の登録済お薬リストを描画
-  function renderMedicineList() {
-    medicineList.innerHTML = '';
-    const patient = appData.patients.find(p => p.id === appData.currentPatientId);
-    if (!patient || !patient.meds) return;
+.registered-medicines-list {
+  margin-top: 10px;
+}
 
-    patient.meds.forEach((med) => {
-      const li = document.createElement('li');
-      const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join(', ') : 'タイミング指定なし';
-      li.style.marginBottom = '4px';
-      li.innerHTML = `<strong>${med.name}</strong> - ${med.dosage} [${timingsStr}]`;
-      medicineList.appendChild(li);
-    });
-  }
+#medicine-list {
+  list-style: none;
+  max-height: 90px;
+  overflow-y: auto;
+}
 
-  // QRコードの解読処理
-  function parseMedicineQR(text) {
-    let medName = "";
-    let dosage = "";
-    let timings = [];
+#medicine-list li {
+  background: #fff;
+  border: 1.5px solid #eee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
 
-    const lines = text.split('\n');
-    let isJahis = false;
-
-    lines.forEach(line => {
-      const cols = line.split(',');
-      if (cols[0] === '201' || cols[0] === '281') {
-        isJahis = true;
-        medName = cols[4] || cols[3] || medName;
-        if (cols[5]) dosage = cols[5] + (cols[6] || '');
-      }
-      if (cols[0] === '301' || cols[0] === '311') {
-        const usageText = cols[4] || '';
-        extractTimings(usageText, timings);
-      }
-    });
-
-    if (!isJahis) {
-      try {
-        const data = JSON.parse(text);
-        medName = data.name || "";
-        dosage = data.dosage || "";
-        if (Array.isArray(data.timing)) timings = data.timing;
-      } catch (e) {
-        medName = text.split(/\s+/)[0] || text;
-        extractTimings(text, timings);
-      }
-    }
-
-    medName = cleanProductName(medName);
-
-    if (medName) document.getElementById('med-name').value = medName;
-    if (dosage) document.getElementById('med-dosage').value = dosage;
-
-    const checkboxes = document.querySelectorAll('input[name="med-timing"]');
-    checkboxes.forEach(cb => {
-      cb.checked = timings.includes(cb.value);
-    });
-
-    alert(`お薬情報を取り込みました:\n薬品名: ${medName || '未取得'}`);
-  }
-
-  function extractTimings(str, targetArray) {
-    if (str.includes('朝')) targetArray.push('朝');
-    if (str.includes('昼')) targetArray.push('昼');
-    if (str.includes('夕') || str.includes('夜')) targetArray.push('夕');
-    if (str.includes('寝') || str.includes('就寝')) targetArray.push('就寝前');
-    if (str.includes('頓') || str.includes('痛')) targetArray.push('頓服');
-  }
-});
+.back-step-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  background: #7f8c8d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
