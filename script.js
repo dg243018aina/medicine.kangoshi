@@ -56,7 +56,6 @@ function generateNextPatientId(patients) {
   return String(maxNum + 1);
 }
 
-// 別フォルダ・別端末でも引き継げる連携コードを生成
 function encodePatientSyncCode(patient) {
   const payload = {
     id: patient.id,
@@ -66,7 +65,25 @@ function encodePatientSyncCode(patient) {
     schedule: patient.schedule || [],
     meds: patient.meds || []
   };
-  return 'MED:' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binStr = '';
+  bytes.forEach(b => { binStr += String.fromCharCode(b); });
+  return 'MED:' + btoa(binStr);
+}
+
+function copyTextSafely(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
 }
 
 let appData = getData();
@@ -97,6 +114,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('header-carte-btn').addEventListener('click', () => {
     renderCarteScreen(appData.currentPatientId);
     showScreen(stepCarte);
+  });
+
+  // カルテ表示中の患者にそのままお薬を追加・編集するボタン
+  document.getElementById('edit-current-patient-med-btn').addEventListener('click', () => {
+    const existing = appData.patients.find(p => String(p.id) === String(appData.currentPatientId)) || appData.patients[0];
+    if (!existing) return;
+
+    draftPatient = {
+      ...existing,
+      schedule: existing.schedule ? existing.schedule.map(s => ({ ...s })) : [],
+      meds: existing.meds ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
+      isNew: false
+    };
+
+    targetPatientName.textContent = draftPatient.name;
+    if (targetPatientId) targetPatientId.textContent = draftPatient.id;
+
+    renderDraftMedicineList();
+    showScreen(step2);
   });
 
   patientSelect.addEventListener('change', (e) => {
@@ -137,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
       draftPatient = {
         ...existing,
         schedule: scheduleData,
-        meds: existing ? [...existing.meds] : [],
+        meds: existing && existing.meds ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
         isNew: false
       };
       targetPatientName.textContent = draftPatient ? draftPatient.name : '未指定';
@@ -159,7 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
     draftPatient.meds.push({
       name: name,
       dosage: dosage || '指定なし',
-      timing: checkedTimings
+      timing: checkedTimings,
+      isNewlyAdded: true
     });
 
     renderDraftMedicineList();
@@ -251,8 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
     draftPatient.meds.forEach((med, idx) => {
       const li = document.createElement('li');
       const timingsStr = med.timing && med.timing.length > 0 ? med.timing.join(', ') : '指定なし';
+      const newBadge = med.isNewlyAdded ? '<span style="background:#ff922b;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:4px;margin-right:4px;">追加</span>' : '';
       li.innerHTML = `
-        <span><strong>${med.name}</strong> (${med.dosage}) [${timingsStr}]</span>
+        <span>${newBadge}<strong>${med.name}</strong> (${med.dosage}) [${timingsStr}]</span>
         <button type="button" class="del-med-btn" data-idx="${idx}">削除</button>
       `;
       li.querySelector('.del-med-btn').addEventListener('click', () => {
@@ -277,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const issuedIdEl = document.getElementById('carte-issued-id');
     if (issuedIdEl) issuedIdEl.textContent = patient.id;
 
-    // 別フォルダ・別端末用の連携コード表示エリアを自動追加
+    const syncCode = encodePatientSyncCode(patient);
     const banner = document.querySelector('.issued-id-banner');
     if (banner) {
       let syncBox = document.getElementById('sync-code-box');
@@ -287,23 +325,36 @@ document.addEventListener('DOMContentLoaded', () => {
         syncBox.style.cssText = 'margin-top:8px; padding-top:8px; border-top:1px dashed #7fb3d5;';
         syncBox.innerHTML = `
           <div style="font-size:0.72rem; font-weight:700; color:#1f618d; margin-bottom:4px;">
-            別フォルダ・別端末で開く場合は下の連携コードをコピーして患者側に入力
+            別デバイス用（連携コード または QR）
           </div>
-          <div style="display:flex; gap:4px;">
+          <div style="display:flex; gap:4px; margin-bottom:6px;">
             <input type="text" id="sync-code-input" readonly style="font-size:0.72rem; padding:4px 6px; margin:0; background:#fff; border:1px solid #2980b9; border-radius:6px;">
             <button type="button" id="copy-sync-code-btn" style="background:#2980b9; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:0.75rem; font-weight:700; white-space:nowrap; cursor:pointer;">コピー</button>
+          </div>
+          <div id="sync-qr-wrap" style="text-align:center;">
+            <img id="sync-qr-img" alt="患者連携QR" style="width:110px; height:110px; border:2px solid #fff; border-radius:8px; background:#fff;">
           </div>
         `;
         banner.appendChild(syncBox);
 
         document.getElementById('copy-sync-code-btn').addEventListener('click', () => {
-          const codeInput = document.getElementById('sync-code-input');
-          codeInput.select();
-          navigator.clipboard?.writeText(codeInput.value);
-          alert('連携コードをコピーしました！患者側アプリの入力欄に貼り付けてください。');
+          const val = document.getElementById('sync-code-input').value;
+          copyTextSafely(val);
+          alert('最新の連携コードをコピーしました！患者側デバイスの「くすり」画面にある更新ボタンから貼り付けてください。');
         });
       }
-      document.getElementById('sync-code-input').value = encodePatientSyncCode(patient);
+
+      document.getElementById('sync-code-input').value = syncCode;
+
+      let qrTarget = syncCode;
+      if (location.protocol.startsWith('http')) {
+        const patientUrl = location.href.replace(/\/pharmacist\/.*$/, '/patient/index.html').replace(/pharmacist\.html.*$/, 'patient.html');
+        qrTarget = `${patientUrl}?sync=${encodeURIComponent(syncCode)}`;
+      }
+      const qrImg = document.getElementById('sync-qr-img');
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrTarget)}`;
+      }
     }
 
     document.getElementById('carte-name').textContent = patient.name;
