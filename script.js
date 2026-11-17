@@ -56,6 +56,19 @@ function generateNextPatientId(patients) {
   return String(maxNum + 1);
 }
 
+// 別フォルダ・別端末でも引き継げる連携コードを生成
+function encodePatientSyncCode(patient) {
+  const payload = {
+    id: patient.id,
+    name: patient.name,
+    updatedAt: patient.updatedAt || '',
+    memo: patient.memo || '',
+    schedule: patient.schedule || [],
+    meds: patient.meds || []
+  };
+  return 'MED:' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+
 let appData = getData();
 let html5QrCode = null;
 let draftPatient = null;
@@ -263,6 +276,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const issuedIdEl = document.getElementById('carte-issued-id');
     if (issuedIdEl) issuedIdEl.textContent = patient.id;
+
+    // 別フォルダ・別端末用の連携コード表示エリアを自動追加
+    const banner = document.querySelector('.issued-id-banner');
+    if (banner) {
+      let syncBox = document.getElementById('sync-code-box');
+      if (!syncBox) {
+        syncBox = document.createElement('div');
+        syncBox.id = 'sync-code-box';
+        syncBox.style.cssText = 'margin-top:8px; padding-top:8px; border-top:1px dashed #7fb3d5;';
+        syncBox.innerHTML = `
+          <div style="font-size:0.72rem; font-weight:700; color:#1f618d; margin-bottom:4px;">
+            別フォルダ・別端末で開く場合は下の連携コードをコピーして患者側に入力
+          </div>
+          <div style="display:flex; gap:4px;">
+            <input type="text" id="sync-code-input" readonly style="font-size:0.72rem; padding:4px 6px; margin:0; background:#fff; border:1px solid #2980b9; border-radius:6px;">
+            <button type="button" id="copy-sync-code-btn" style="background:#2980b9; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:0.75rem; font-weight:700; white-space:nowrap; cursor:pointer;">コピー</button>
+          </div>
+        `;
+        banner.appendChild(syncBox);
+
+        document.getElementById('copy-sync-code-btn').addEventListener('click', () => {
+          const codeInput = document.getElementById('sync-code-input');
+          codeInput.select();
+          navigator.clipboard?.writeText(codeInput.value);
+          alert('連携コードをコピーしました！患者側アプリの入力欄に貼り付けてください。');
+        });
+      }
+      document.getElementById('sync-code-input').value = encodePatientSyncCode(patient);
+    }
 
     document.getElementById('carte-name').textContent = patient.name;
     document.getElementById('carte-date').textContent = `更新日: ${patient.updatedAt || '本日'}`;
