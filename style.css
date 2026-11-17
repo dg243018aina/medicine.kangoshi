@@ -246,7 +246,7 @@ textarea {
 
 #medicine-list {
   list-style: none;
-  max-height: 90px;
+  max-height: 110px;
   overflow-y: auto;
 }
 
