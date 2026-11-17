@@ -103,161 +103,206 @@ document.addEventListener('DOMContentLoaded', () => {
   const medicineList = document.getElementById('medicine-list');
 
   function showScreen(targetScreen) {
+    if (!targetScreen) return;
     stopScanner();
-    [step1, step2, stepCarte].forEach(s => s.classList.remove('active'));
+    [step1, step2, stepCarte].forEach(s => {
+      if (s) s.classList.remove('active');
+    });
     targetScreen.classList.add('active');
   }
 
-  renderPatientSelect();
-  loadCurrentSchedule();
-
-  document.getElementById('header-carte-btn').addEventListener('click', () => {
-    renderCarteScreen(appData.currentPatientId);
-    showScreen(stepCarte);
-  });
-
-  // カルテ表示中の患者にそのままお薬を追加・編集するボタン
-  document.getElementById('edit-current-patient-med-btn').addEventListener('click', () => {
+  function openEditMedForCurrentPatient() {
     const existing = appData.patients.find(p => String(p.id) === String(appData.currentPatientId)) || appData.patients[0];
     if (!existing) return;
 
     draftPatient = {
       ...existing,
-      schedule: existing.schedule ? existing.schedule.map(s => ({ ...s })) : [],
-      meds: existing.meds ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
+      schedule: Array.isArray(existing.schedule) ? existing.schedule.map(s => ({ ...s })) : [],
+      meds: Array.isArray(existing.meds) ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
       isNew: false
     };
 
-    targetPatientName.textContent = draftPatient.name;
+    if (targetPatientName) targetPatientName.textContent = draftPatient.name;
     if (targetPatientId) targetPatientId.textContent = draftPatient.id;
 
     renderDraftMedicineList();
     showScreen(step2);
-  });
+  }
 
-  patientSelect.addEventListener('change', (e) => {
-    const selectedId = e.target.value;
-    if (selectedId) {
-      appData.currentPatientId = selectedId;
-      patientInput.value = '';
-      loadCurrentSchedule();
-    }
-  });
+  renderPatientSelect();
+  loadCurrentSchedule();
 
-  editScheduleForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+  const headerCarteBtn = document.getElementById('header-carte-btn');
+  if (headerCarteBtn) {
+    headerCarteBtn.addEventListener('click', () => {
+      renderCarteScreen(appData.currentPatientId);
+      showScreen(stepCarte);
+    });
+  }
 
-    const newName = patientInput.value.trim();
-    const scheduleData = [
-      { label: '朝ごはん', time: document.getElementById('sched-bf').value || '07:00' },
-      { label: '昼ごはん', time: document.getElementById('sched-lunch').value || '12:00' },
-      { label: '晩ごはん', time: document.getElementById('sched-dinner').value || '19:00' },
-      { label: 'お風呂', time: document.getElementById('sched-bath').value || '17:00' }
-    ];
+  const editCurrentMedBtn = document.getElementById('edit-current-patient-med-btn');
+  if (editCurrentMedBtn) {
+    editCurrentMedBtn.addEventListener('click', openEditMedForCurrentPatient);
+  }
 
-    if (newName) {
-      const issuedId = generateNextPatientId(appData.patients);
-      draftPatient = {
-        id: issuedId,
-        name: newName,
-        updatedAt: new Date().toLocaleDateString('ja-JP'),
-        memo: '',
-        schedule: scheduleData,
-        meds: [],
-        isNew: true
-      };
-      targetPatientName.textContent = `${draftPatient.name}（新規）`;
-      if (targetPatientId) targetPatientId.textContent = issuedId;
-    } else {
-      const existing = appData.patients.find(p => String(p.id) === String(appData.currentPatientId)) || appData.patients[0];
-      draftPatient = {
-        ...existing,
-        schedule: scheduleData,
-        meds: existing && existing.meds ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
-        isNew: false
-      };
-      targetPatientName.textContent = draftPatient ? draftPatient.name : '未指定';
-      if (targetPatientId) targetPatientId.textContent = draftPatient ? draftPatient.id : '----';
-    }
-
-    renderDraftMedicineList();
-    showScreen(step2);
-  });
-
-  document.getElementById('add-medicine-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!draftPatient) return;
-
-    const name = cleanProductName(document.getElementById('med-name').value);
-    const dosage = document.getElementById('med-dosage').value;
-    const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
-
-    draftPatient.meds.push({
-      name: name,
-      dosage: dosage || '指定なし',
-      timing: checkedTimings,
-      isNewlyAdded: true
+  if (patientInput && patientSelect) {
+    patientInput.addEventListener('input', () => {
+      if (patientInput.value.trim() !== '') {
+        patientSelect.value = '';
+      }
     });
 
-    renderDraftMedicineList();
-    e.target.reset();
-  });
-
-  document.getElementById('complete-patient-btn').addEventListener('click', () => {
-    if (!draftPatient) return;
-
-    draftPatient.updatedAt = new Date().toLocaleDateString('ja-JP');
-
-    if (draftPatient.isNew) {
-      delete draftPatient.isNew;
-      appData.patients.push(draftPatient);
-    } else {
-      const idx = appData.patients.findIndex(p => String(p.id) === String(draftPatient.id));
-      if (idx !== -1) {
-        delete draftPatient.isNew;
-        appData.patients[idx] = draftPatient;
+    patientSelect.addEventListener('change', (e) => {
+      const selectedId = e.target.value;
+      if (selectedId) {
+        appData.currentPatientId = selectedId;
+        patientInput.value = '';
+        loadCurrentSchedule();
       }
-    }
+    });
+  }
 
-    appData.currentPatientId = draftPatient.id;
-    saveData(appData);
+  if (editScheduleForm) {
+    editScheduleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    patientInput.value = '';
-    renderPatientSelect();
+      const newName = patientInput ? patientInput.value.trim() : '';
+      const scheduleData = [
+        { label: '朝ごはん', time: document.getElementById('sched-bf')?.value || '07:00' },
+        { label: '昼ごはん', time: document.getElementById('sched-lunch')?.value || '12:00' },
+        { label: '晩ごはん', time: document.getElementById('sched-dinner')?.value || '19:00' },
+        { label: 'お風呂', time: document.getElementById('sched-bath')?.value || '17:00' }
+      ];
 
-    renderCarteScreen(draftPatient.id);
-    showScreen(stepCarte);
-  });
+      if (newName) {
+        const issuedId = generateNextPatientId(appData.patients);
+        draftPatient = {
+          id: issuedId,
+          name: newName,
+          updatedAt: new Date().toLocaleDateString('ja-JP'),
+          memo: '',
+          schedule: scheduleData,
+          meds: [],
+          isNew: true
+        };
+        if (targetPatientName) targetPatientName.textContent = `${draftPatient.name}（新規）`;
+        if (targetPatientId) targetPatientId.textContent = issuedId;
+      } else {
+        const targetId = (patientSelect && patientSelect.value) ? patientSelect.value : appData.currentPatientId;
+        const existing = appData.patients.find(p => String(p.id) === String(targetId)) || appData.patients[0];
+        draftPatient = {
+          ...existing,
+          schedule: scheduleData,
+          meds: existing && Array.isArray(existing.meds) ? existing.meds.map(m => ({ ...m, timing: [...(m.timing || [])] })) : [],
+          isNew: false
+        };
+        if (targetPatientName) targetPatientName.textContent = draftPatient ? draftPatient.name : '未指定';
+        if (targetPatientId) targetPatientId.textContent = draftPatient ? draftPatient.id : '----';
+      }
 
-  document.getElementById('back-to-step1-btn').addEventListener('click', () => {
-    showScreen(step1);
-  });
+      renderDraftMedicineList();
+      showScreen(step2);
+    });
+  }
 
-  document.getElementById('carte-patient-select').addEventListener('change', (e) => {
-    const id = e.target.value;
-    if (id) {
-      appData.currentPatientId = id;
+  const addMedicineForm = document.getElementById('add-medicine-form');
+  if (addMedicineForm) {
+    addMedicineForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!draftPatient) return;
+
+      const medNameInput = document.getElementById('med-name');
+      const medDosageInput = document.getElementById('med-dosage');
+      const name = cleanProductName(medNameInput ? medNameInput.value : '');
+      if (!name) return;
+
+      const dosage = medDosageInput ? medDosageInput.value : '';
+      const checkedTimings = Array.from(document.querySelectorAll('input[name="med-timing"]:checked')).map(cb => cb.value);
+
+      draftPatient.meds.push({
+        name: name,
+        dosage: dosage || '指定なし',
+        timing: checkedTimings,
+        isNewlyAdded: true
+      });
+
+      renderDraftMedicineList();
+      e.target.reset();
+    });
+  }
+
+  const completePatientBtn = document.getElementById('complete-patient-btn');
+  if (completePatientBtn) {
+    completePatientBtn.addEventListener('click', () => {
+      if (!draftPatient) return;
+
+      draftPatient.updatedAt = new Date().toLocaleDateString('ja-JP');
+
+      if (draftPatient.isNew) {
+        delete draftPatient.isNew;
+        appData.patients.push(draftPatient);
+      } else {
+        const idx = appData.patients.findIndex(p => String(p.id) === String(draftPatient.id));
+        if (idx !== -1) {
+          delete draftPatient.isNew;
+          appData.patients[idx] = draftPatient;
+        }
+      }
+
+      appData.currentPatientId = draftPatient.id;
       saveData(appData);
-      renderCarteScreen(id);
-    }
-  });
 
-  document.getElementById('save-memo-btn').addEventListener('click', () => {
-    const patient = appData.patients.find(p => String(p.id) === String(appData.currentPatientId));
-    if (patient) {
-      patient.memo = document.getElementById('carte-memo').value;
-      saveData(appData);
-      alert('診察メモを保存しました。');
-    }
-  });
+      if (patientInput) patientInput.value = '';
+      renderPatientSelect();
 
-  document.getElementById('new-register-btn').addEventListener('click', () => {
-    patientInput.value = '';
-    patientSelect.value = '';
-    showScreen(step1);
-  });
+      renderCarteScreen(draftPatient.id);
+      showScreen(stepCarte);
+    });
+  }
+
+  const backToStep1Btn = document.getElementById('back-to-step1-btn');
+  if (backToStep1Btn) {
+    backToStep1Btn.addEventListener('click', () => {
+      showScreen(step1);
+    });
+  }
+
+  const cartePatientSelect = document.getElementById('carte-patient-select');
+  if (cartePatientSelect) {
+    cartePatientSelect.addEventListener('change', (e) => {
+      const id = e.target.value;
+      if (id) {
+        appData.currentPatientId = id;
+        saveData(appData);
+        renderCarteScreen(id);
+      }
+    });
+  }
+
+  const saveMemoBtn = document.getElementById('save-memo-btn');
+  if (saveMemoBtn) {
+    saveMemoBtn.addEventListener('click', () => {
+      const patient = appData.patients.find(p => String(p.id) === String(appData.currentPatientId));
+      if (patient) {
+        const memoEl = document.getElementById('carte-memo');
+        patient.memo = memoEl ? memoEl.value : '';
+        saveData(appData);
+        alert('診察メモを保存しました。');
+      }
+    });
+  }
+
+  const newRegisterBtn = document.getElementById('new-register-btn');
+  if (newRegisterBtn) {
+    newRegisterBtn.addEventListener('click', () => {
+      if (patientInput) patientInput.value = '';
+      if (patientSelect) patientSelect.value = '';
+      showScreen(step1);
+    });
+  }
 
   function renderPatientSelect() {
+    if (!patientSelect) return;
     patientSelect.innerHTML = '<option value="">-- 患者を選択してください --</option>' +
       appData.patients.map(p => `
         <option value="${p.id}" ${String(p.id) === String(appData.currentPatientId) ? 'selected' : ''}>
@@ -268,22 +313,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadCurrentSchedule() {
     const patient = appData.patients.find(p => String(p.id) === String(appData.currentPatientId));
-    if (!patient) return;
+    if (!patient || !Array.isArray(patient.schedule)) return;
 
     const bf = patient.schedule.find(s => s.label === '朝ごはん');
     const lunch = patient.schedule.find(s => s.label === '昼ごはん');
     const dinner = patient.schedule.find(s => s.label === '晩ごはん');
     const bath = patient.schedule.find(s => s.label === 'お風呂');
 
-    if (bf) document.getElementById('sched-bf').value = bf.time;
-    if (lunch) document.getElementById('sched-lunch').value = lunch.time;
-    if (dinner) document.getElementById('sched-dinner').value = dinner.time;
-    if (bath) document.getElementById('sched-bath').value = bath.time;
+    if (bf && document.getElementById('sched-bf')) document.getElementById('sched-bf').value = bf.time;
+    if (lunch && document.getElementById('sched-lunch')) document.getElementById('sched-lunch').value = lunch.time;
+    if (dinner && document.getElementById('sched-dinner')) document.getElementById('sched-dinner').value = dinner.time;
+    if (bath && document.getElementById('sched-bath')) document.getElementById('sched-bath').value = bath.time;
   }
 
   function renderDraftMedicineList() {
+    if (!medicineList) return;
     medicineList.innerHTML = '';
-    if (!draftPatient || !draftPatient.meds) return;
+    if (!draftPatient || !Array.isArray(draftPatient.meds)) return;
 
     draftPatient.meds.forEach((med, idx) => {
       const li = document.createElement('li');
@@ -303,11 +349,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderCarteScreen(patientId) {
     const carteSelect = document.getElementById('carte-patient-select');
-    carteSelect.innerHTML = appData.patients.map(p => `
-      <option value="${p.id}" ${String(p.id) === String(patientId) ? 'selected' : ''}>
-        [ID: ${p.id}] ${p.name} 様
-      </option>
-    `).join('');
+    if (carteSelect) {
+      carteSelect.innerHTML = appData.patients.map(p => `
+        <option value="${p.id}" ${String(p.id) === String(patientId) ? 'selected' : ''}>
+          [ID: ${p.id}] ${p.name} 様
+        </option>
+      `).join('');
+
+      // index.htmlにボタンが無い場合でも自動挿入する
+      if (!document.getElementById('edit-current-patient-med-btn')) {
+        const addMedBtn = document.createElement('button');
+        addMedBtn.type = 'button';
+        addMedBtn.id = 'edit-current-patient-med-btn';
+        addMedBtn.className = 'action-btn btn-orange';
+        addMedBtn.style.marginTop = '8px';
+        addMedBtn.textContent = '💊 この患者にお薬を追加・編集する';
+        addMedBtn.addEventListener('click', openEditMedForCurrentPatient);
+        carteSelect.insertAdjacentElement('afterend', addMedBtn);
+      }
+    }
 
     const patient = appData.patients.find(p => String(p.id) === String(patientId)) || appData.patients[0];
     if (!patient) return;
@@ -344,7 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      document.getElementById('sync-code-input').value = syncCode;
+      const syncInput = document.getElementById('sync-code-input');
+      if (syncInput) syncInput.value = syncCode;
 
       let qrTarget = syncCode;
       if (location.protocol.startsWith('http')) {
@@ -357,25 +418,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    document.getElementById('carte-name').textContent = patient.name;
-    document.getElementById('carte-date').textContent = `更新日: ${patient.updatedAt || '本日'}`;
-    document.getElementById('carte-memo').value = patient.memo || '';
+    const carteName = document.getElementById('carte-name');
+    const carteDate = document.getElementById('carte-date');
+    const carteMemo = document.getElementById('carte-memo');
+    if (carteName) carteName.textContent = patient.name;
+    if (carteDate) carteDate.textContent = `更新日: ${patient.updatedAt || '本日'}`;
+    if (carteMemo) carteMemo.value = patient.memo || '';
 
     const schedContainer = document.getElementById('carte-schedule-list');
-    schedContainer.innerHTML = patient.schedule.map(s => `
-      <div><strong>${s.label}:</strong> ${s.time}</div>
-    `).join('');
+    if (schedContainer) {
+      schedContainer.innerHTML = (patient.schedule || []).map(s => `
+        <div><strong>${s.label}:</strong> ${s.time}</div>
+      `).join('');
+    }
 
     const medContainer = document.getElementById('carte-med-list');
-    if (patient.meds.length === 0) {
-      medContainer.innerHTML = '<li style="background:#f9f9f9; border-color:#ccc;">登録されたお薬はありません</li>';
-    } else {
-      medContainer.innerHTML = patient.meds.map(m => `
-        <li>
-          <strong>${m.name}</strong>（${m.dosage}）<br>
-          <span style="color:#27ae60; font-weight:bold;">服用: ${m.timing.join('・') || '指定なし'}</span>
-        </li>
-      `).join('');
+    if (medContainer) {
+      if (!patient.meds || patient.meds.length === 0) {
+        medContainer.innerHTML = '<li style="background:#f9f9f9; border-color:#ccc;">登録されたお薬はありません</li>';
+      } else {
+        medContainer.innerHTML = patient.meds.map(m => `
+          <li>
+            <strong>${m.name}</strong>（${m.dosage}）<br>
+            <span style="color:#27ae60; font-weight:bold;">服用: ${(m.timing || []).join('・') || '指定なし'}</span>
+          </li>
+        `).join('');
+      }
     }
   }
 
@@ -383,40 +451,44 @@ document.addEventListener('DOMContentLoaded', () => {
   const stopBtn = document.getElementById('stop-scan-btn');
   const readerContainer = document.getElementById('qr-reader-container');
 
-  startBtn.addEventListener('click', () => {
-    if (typeof Html5Qrcode === 'undefined') {
-      alert('QR読み取りライブラリの読み込み中です。');
-      return;
-    }
-    readerContainer.style.display = 'block';
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode('qr-reader');
-    }
+  if (startBtn && readerContainer) {
+    startBtn.addEventListener('click', () => {
+      if (typeof Html5Qrcode === 'undefined') {
+        alert('QR読み取りライブラリの読み込み中です。');
+        return;
+      }
+      readerContainer.style.display = 'block';
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode('qr-reader');
+      }
 
-    html5QrCode.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      (decodedText) => {
-        parseMedicineQR(decodedText);
-        stopScanner();
-      },
-      () => {}
-    ).catch(err => {
-      alert('カメラの起動に失敗しました: ' + err);
-      readerContainer.style.display = 'none';
+      html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (decodedText) => {
+          parseMedicineQR(decodedText);
+          stopScanner();
+        },
+        () => {}
+      ).catch(err => {
+        alert('カメラの起動に失敗しました: ' + err);
+        readerContainer.style.display = 'none';
+      });
     });
-  });
+  }
 
-  stopBtn.addEventListener('click', stopScanner);
+  if (stopBtn) {
+    stopBtn.addEventListener('click', stopScanner);
+  }
 
   function stopScanner() {
     if (html5QrCode && html5QrCode.isScanning) {
       html5QrCode.stop().then(() => {
-        readerContainer.style.display = 'none';
+        if (readerContainer) readerContainer.style.display = 'none';
       }).catch(() => {
-        readerContainer.style.display = 'none';
+        if (readerContainer) readerContainer.style.display = 'none';
       });
-    } else {
+    } else if (readerContainer) {
       readerContainer.style.display = 'none';
     }
   }
@@ -460,8 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     medName = cleanProductName(medName);
 
-    if (medName) document.getElementById('med-name').value = medName;
-    if (dosage) document.getElementById('med-dosage').value = dosage;
+    if (medName && document.getElementById('med-name')) document.getElementById('med-name').value = medName;
+    if (dosage && document.getElementById('med-dosage')) document.getElementById('med-dosage').value = dosage;
 
     const checkboxes = document.querySelectorAll('input[name="med-timing"]');
     checkboxes.forEach(cb => {
