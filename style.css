@@ -220,11 +220,12 @@ textarea {
   cursor: pointer;
 }
 
+/* いつ飲むか（食前・食後8項目用の2列グリッド） */
 .checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  padding: 8px 10px;
   background: #fff;
   border: 1.5px solid #ccc;
   border-radius: 8px;
@@ -234,10 +235,16 @@ textarea {
 .checkbox-group label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
+  gap: 6px;
+  font-size: 0.82rem;
   margin: 0;
   cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin: 0;
 }
 
 .registered-medicines-list {
@@ -255,127 +262,4 @@ textarea {
   border: 1.5px solid #eee;
   border-radius: 8px;
   padding: 5px 8px;
-  margin-bottom: 4px;
-  font-size: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.del-med-btn {
-  background: #ffe3e3;
-  color: #e03131;
-  border: none;
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.back-step-btn {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  background: #7f8c8d;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.carte-header-badge {
-  background: #2c3e50;
-  color: #fff;
-  text-align: center;
-  padding: 6px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 900;
-  margin-bottom: 8px;
-}
-
-.issued-id-banner {
-  background: linear-gradient(135deg, #ebf5fb 0%, #d6eaf8 100%);
-  border: 2px solid #2980b9;
-  border-radius: 12px;
-  padding: 10px;
-  margin-top: 8px;
-  text-align: center;
-}
-
-.issued-id-label {
-  font-size: 0.78rem;
-  font-weight: 900;
-  color: #1f618d;
-}
-
-.issued-id-number {
-  font-size: 1.9rem;
-  font-weight: 900;
-  color: #154360;
-  letter-spacing: 0.12em;
-  margin: 2px 0;
-  user-select: text;
-}
-
-.issued-id-note {
-  font-size: 0.72rem;
-  color: #2c3e50;
-}
-
-.carte-card {
-  background: #fff;
-  border: 2px solid #dfe6e9;
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 8px;
-  margin-bottom: 10px;
-}
-
-.carte-patient-title {
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: #2d3436;
-  border-bottom: 2px solid #e67e22;
-  padding-bottom: 6px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.carte-sub {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #7f8c8d;
-}
-
-.carte-section {
-  margin-bottom: 10px;
-}
-
-.carte-schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 8px;
-  background: #f8f9fa;
-  padding: 8px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-}
-
-.carte-med-list {
-  list-style: none;
-}
-
-.carte-med-list li {
-  background: #eef7f2;
-  border-left: 3px solid #27ae60;
-  padding: 6px 8px;
-  margin-bottom: 4px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
+  margin-bottom:
