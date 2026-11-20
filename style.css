@@ -193,7 +193,7 @@ textarea {
   padding: 6px 8px;
   margin-bottom: 8px;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: #555;
   line-height: 1.35;
 }
@@ -220,46 +220,243 @@ textarea {
   cursor: pointer;
 }
 
-/* いつ飲むか（食前・食後8項目用の2列グリッド） */
-.checkbox-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.checkbox-group,
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px 10px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: #fff;
   border: 1.5px solid #ccc;
   border-radius: 8px;
   margin-bottom: 6px;
 }
 
-.checkbox-group label {
+.radio-group {
+  background: #f4f9ff;
+  border-color: #a5d8ff;
+}
+
+.checkbox-group label,
+.radio-group label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 4px;
+  font-size: 0.8rem;
   margin: 0;
   cursor: pointer;
 }
 
-.checkbox-group input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-}
-
 .registered-medicines-list {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 #medicine-list {
   list-style: none;
-  max-height: 110px;
+  max-height: 230px;
   overflow-y: auto;
 }
 
-#medicine-list li {
+.med-edit-card {
   background: #fff;
-  border: 1.5px solid #eee;
+  border: 1.5px solid #dfe6e9;
+  border-left: 4px solid #27ae60;
+  border-radius: 10px;
+  padding: 8px 9px;
+  margin-bottom: 7px;
+  font-size: 0.8rem;
+}
+
+.med-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #e9ecef;
+}
+
+.med-edit-title {
+  font-size: 0.85rem;
+  color: #2d3436;
+}
+
+.med-meal-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.meal-slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.meal-slot-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #333;
+  cursor: pointer;
+}
+
+.meal-slot-select {
+  width: auto !important;
+  min-width: 96px;
+  padding: 2px 6px !important;
+  margin: 0 !important;
+  font-size: 0.76rem !important;
+  font-weight: 700;
+  border: 1.5px solid #74c0fc !important;
+  border-radius: 6px !important;
+  background: #fff;
+  color: #1864ab;
+}
+
+.meal-slot-select:disabled {
+  opacity: 0.4;
+  border-color: #ced4da !important;
+  color: #868e96;
+}
+
+.extra-timing-row {
+  display: flex;
+  gap: 12px;
+  padding: 2px 4px 0;
+}
+
+.extra-timing-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.76rem;
+  color: #495057;
+  cursor: pointer;
+}
+
+.del-med-btn {
+  background: #ffe3e3;
+  color: #e03131;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-step-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  background: #7f8c8d;
+  color: #fff;
+  border: none;
   border-radius: 8px;
-  padding: 5px 8px;
-  margin-bottom:
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.carte-header-badge {
+  background: #2c3e50;
+  color: #fff;
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.issued-id-banner {
+  background: linear-gradient(135deg, #ebf5fb 0%, #d6eaf8 100%);
+  border: 2px solid #2980b9;
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.issued-id-label {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #1f618d;
+}
+
+.issued-id-number {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #154360;
+  letter-spacing: 0.12em;
+  margin: 2px 0;
+  user-select: text;
+}
+
+.issued-id-note {
+  font-size: 0.72rem;
+  color: #2c3e50;
+}
+
+.carte-card {
+  background: #fff;
+  border: 2px solid #dfe6e9;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+.carte-patient-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #2d3436;
+  border-bottom: 2px solid #e67e22;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.carte-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #7f8c8d;
+}
+
+.carte-section {
+  margin-bottom: 10px;
+}
+
+.carte-schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  background: #f8f9fa;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.carte-med-list {
+  list-style: none;
+}
+
+.carte-med-list li {
+  background: #eef7f2;
+  border-left: 3px solid #27ae60;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
